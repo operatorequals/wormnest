@@ -129,7 +129,10 @@ def add_url():
 	alias = request.args.get("alias")
 	attach_name = request.args.get("filename")
 	unchecked_path = request.args.get("unchecked", False)
-
+	if not request.args:
+		return render_template(
+			'add_help.html', 
+		)
 	try:
 		original_filename = path.split('/')[-1]
 		original_extension = original_filename.split('.')[-1]

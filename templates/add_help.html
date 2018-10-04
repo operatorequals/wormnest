@@ -1,0 +1,28 @@
+<html><head>
+<title>
+Add Usage
+</title>
+</head>
+<body>
+	The Following parameters are needed (either GET or POST):
+	<ul>
+		<li>
+<b>path</b>:
+The Path to the file to be served with minified URL.
+		</li>
+
+		<li>
+<b>clicks</b>:	The number of clicks that will expire the URL. <i>If blank the URL will not expire.</i>
+		</li>
+
+		<li>
+<b>alias</b>:	The alias to be used. <i>If blank a random string will be used.</i>
+		</li>
+
+		<li>
+<b>filename</b>:	The filename that will be served from the minified URL. <i>If blank a default filename will be used.</i>
+		</li>
+
+		<li>
+<b>unchecked</b>:	If "True" the "path" is not checked for existence. This can lead to 404 errors of the minified URL. <i>Defaults to "False".</i>
+		</li>
