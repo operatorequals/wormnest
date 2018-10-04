@@ -16,19 +16,26 @@ FLASK_APP=wormnest/__main__.py python -m flask run --host=127.0.0.1 --port=8080
 '''
 app = Flask(__name__)
 
-IP = "0.0.0.0"
-PORT = 8080
+os.getenv("IP", "0.0.0.0")
+os.getenv("PORT", 8000)
 
-SRV_DIR = "test_directory/"
-ALIAS_DIGITS_MIN = 8
-ALIAS_DIGITS_MAX = 8
+SRV_DIR = os.getenv("SRV_DIR","test_directory/")
+ALIAS_DIGITS_MIN = os.getenv("ALIAS_DIGITS_MIN", 8)
+ALIAS_DIGITS_MAX = os.getenv("ALIAS_DIGITS_MAX", 8)
 LISTING_URL_DIR = 'listing'
 MANAGE_URL_DIR = 'manage'
-REDIRECT_URL = 'https://amazon.com'
-DEFAULT_FILENAME = 'ClientDesktopApp'
-USE_ORIGINAL_EXTENSION = True
-
-DEFAULT_PATHS_FILE = "urls.default.json"
+REDIRECT_URL = os.getenv("REDIRECT_URL",
+	'https://amazon.com'
+	)
+DEFAULT_FILENAME = os.getenv("DEFAULT_FILENAME",
+	'ClientDesktopApp'
+	)
+USE_ORIGINAL_EXTENSION = os.getenv("USE_ORIGINAL_EXTENSION",
+	True
+	)
+DEFAULT_PATHS_FILE = os.getenv("DEFAULT_PATHS_FILE",
+	"urls.default.json"
+	)
 
 @app.route('/%s/load_defaults' % MANAGE_URL_DIR)
 def load_defaults():
