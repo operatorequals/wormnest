@@ -1,7 +1,7 @@
 # wormnest
-A Web Server to hide stuff. A place where worms live and reproduce, but you can't prove it...
+A place where worms live and reproduce, but you can't prove it...
 
-A **Python3** Flask / SQL-Alchemy Web Server for URL minification and manipulated file serving.
+A **Python3** Flask / SQL-Alchemy Web Server for *URL Minification* and *Manipulated File Serving*.
 
 Heavily inspired by [@bluscreenofjeff](https://github.com/bluscreenofjeff/), and his [great blog post about expiring URLs](https://bluescreenofjeff.com/2016-04-19-expire-phishing-links-with-apache-rewritemap/) I spinned my own version of a web server that serves files, creates custom URLs for them, expires them, and more...
 
