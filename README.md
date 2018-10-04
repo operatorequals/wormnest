@@ -59,6 +59,9 @@ to serve `metasploit/generated/meter_pinning_443.exe` with a `"Content-Dispositi
 to serve `metasploit/generated/meter_pinning_443.apk` with the default filename of `ClientDesktopApp` and the file's original extension (`USE_ORIGINAL_EXTENSION` parameter).
 Hence `ClientDesktopApp.apk` will be placed in the `"Content-Disposition" HTTP Header`.
 
+### For *Cobalt Strikers*
+Generating payloads from the CS client directly to the (remote) *Worm Nest* deployment is as simple as [`sshfs`](https://github.com/libfuse/sshfs) to that served directory (`SRV_DIR`). People tend to forget that `scp` is by far NOT THE ONLY WAY!
+
 
 ## Securing your *Worm Nest*!
 There is **no authentication** to use the management endpoint of this service. This effectively means that anyone going under the `/manage/` directory will be able to see, add, delete all URL aliases, and list the whole served directory.
@@ -66,3 +69,5 @@ There is **no authentication** to use the management endpoint of this service. T
 Yet, adding authentication, is (at least at this point) out of scope. That's why the `MANAGE_URL_DIR` exists in the first place. A *passwordish* string here will prevent anyone (not able to guess it) to reach the management endpoint. A password in the URL sucks (I now), but combined with some HTTPS (needed in case of actual use), and with no Intercepting HTTP Proxy between your host and the *Worm Nest* deployment you'll be good enough!
 
 Have Fun!
+
+
