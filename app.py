@@ -60,6 +60,18 @@ def get_random_alias(length=None):
 	return utils.randomword(length)
 
 
+# @app.route('/%s/' % MANAGE_URL_DIR)
+# def show_manage_redir():
+# 	print(request.base_url[:-1])
+# 	return redirect(request.base_url[:-1])
+
+@app.route('/%s/' % MANAGE_URL_DIR)
+def show_manage():
+	return render_template(
+		"manage_help.html",
+		manage_url = request.base_url
+		)
+
 @app.route('/%s/load_defaults' % MANAGE_URL_DIR)
 def load_defaults():
 
@@ -79,8 +91,9 @@ def load_defaults():
 						alias=alias,
 						)
 					)
-	return json.dumps(defaults_url_dict, indent=2)
-
+	return "<pre>{}</pre>".format(
+		json.dumps(defaults_url_dict, indent=2)
+		)
 
 @app.route(
 	'/%s/%s/' % (MANAGE_URL_DIR, LISTING_URL_DIR),
@@ -195,7 +208,11 @@ def add_url():
 
 @app.route('/%s/del' % MANAGE_URL_DIR)
 def del_url():
-	alias = request.args.get("alias")
+	alias = request.args.get("alias", None)
+	if alias is None:
+		return render_template(
+			'del_help.html'
+			)
 	try:
 		deleted = db_handler.del_url(alias)
 	except KeyError:
