@@ -5,8 +5,8 @@ from flask import request,send_file,redirect,render_template, abort
 import os
 import random
 
-# import db_handler
-# import utils 
+import requests
+
 import wormnest.db_handler as db_handler
 import wormnest.utils as utils
 
@@ -16,6 +16,9 @@ FLASK_APP=wormnest/__main__.py python -m flask run --host=127.0.0.1 --port=8080
 '''
 app = Flask(__name__)
 
+IP = "0.0.0.0"
+PORT = 8080
+
 SRV_DIR = "test_directory/"
 ALIAS_DIGITS_MIN = 8
 ALIAS_DIGITS_MAX = 8
@@ -24,6 +27,29 @@ MANAGE_URL_DIR = 'manage'
 REDIRECT_URL = 'https://amazon.com'
 DEFAULT_FILENAME = 'ClientDesktopApp'
 USE_ORIGINAL_EXTENSION = True
+
+DEFAULT_PATHS_FILE = "urls.default.json"
+
+@app.route('/%s/load_defaults' % MANAGE_URL_DIR)
+def load_defaults():
+
+	if DEFAULT_PATHS_FILE:
+		print("[+] Importing defaults from '{}'".format(DEFAULT_PATHS_FILE))
+		import json
+		with open(DEFAULT_PATHS_FILE) as url_defaults:
+			defaults_url_dict = json.load(url_defaults)
+			for path, url_params in defaults_url_dict.items():
+				print(path, url_params)
+				alias = url_params['alias']
+				requests.get(
+	"http://127.0.0.1:{port}/{man}/add?path={path}&alias={alias}&unchecked=True".format(
+						port=PORT,
+						man=MANAGE_URL_DIR,
+						path=path,
+						alias=alias,
+						)
+					)
+	return json.dumps(defaults_url_dict, indent=2)
 
 
 def redirect_away():
@@ -99,9 +125,10 @@ def resolve_url(url_alias):
 def add_url():
 
 	path = request.args.get("path")
-	expires = request.args.get("clicks")
+	expires = request.args.get("clicks", -1)
 	alias = request.args.get("alias")
 	attach_name = request.args.get("filename")
+	unchecked_path = request.args.get("unchecked", False)
 
 	try:
 		original_filename = path.split('/')[-1]
@@ -129,7 +156,7 @@ def add_url():
 				attach_name += original_extension
 
 	path = os.path.join(SRV_DIR, path)
-	if not os.path.isfile(path):
+	if not os.path.isfile(path) and not unchecked_path:
 		return render_template(
 			'custom_error.html', 
 			error_msg="The path '{}' is NOT a file".format(path)
@@ -160,6 +187,7 @@ def add_url():
 			'added_alias.html', 
 			alias=alias,
 			path=path,
+			clicks=expires,
 			link=full_link
 			)
 
@@ -178,8 +206,10 @@ def main(*args, **kwargs):
 	import sys
 	print (sys.argv)
 	app.run(
-		host=os.getenv('IP', '127.0.0.1'), 
-		port=int(os.getenv('PORT',8080)),
+		# host=os.getenv('IP', '127.0.0.1'), 
+		host=IP,
+		# port=int(os.getenv('PORT',8080)),
+		port=PORT,
 		debug=True
 		)
 
