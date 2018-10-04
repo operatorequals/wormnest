@@ -41,7 +41,7 @@ def get_all(path=None):
 	return session.query(Url).filter(Url.path.ilike(path)).all()
 
 
-def get_path(alias):
+def get_path(alias, click=True, delete=False):
 	session = Session()
 	try:
 		entry = session.query(Url).filter(Url.url_alias == alias).one()
@@ -49,10 +49,21 @@ def get_path(alias):
 		entry = None
 
 	if entry is None:
+		session.close()
 		raise KeyError("Entry not available for '{}'".format(alias))
 
 	print (entry)
+	if delete:
+		session.delete(entry)
+		session.commit()
+		return True
+
+	if not click:
+		session.close()
+		return entry
+
 	if entry.expires_after_clicks == -1:
+		session.close()
 		return entry
 
 	if entry.expires_after_clicks > 0:
@@ -74,3 +85,10 @@ def add_url(path, url_alias, expires, attachment=None):
 		)
 	session.add(entry)
 	session.commit()
+
+
+
+def del_url(url_alias):
+
+	return get_path(url_alias, click=False, delete=True)
+

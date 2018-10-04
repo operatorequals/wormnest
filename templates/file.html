@@ -3,6 +3,19 @@
 
 <ul>
     {% for file in files %}
-    <li><a href="{{ file[1] }}">{{ file[0] }}</a></li>
+    <li>
+    	<table>
+    		<tr><td>
+<a href="{{ file[1] }}">{{ file[0] }}</a>
+    		</td>
+
+    		<td>
+<!--
+<a href="{{ add_url }}?path={{ file[0] }}">link
+-->
+    		</td>
+    	</tr>
+	    </table>
+    </li>
     {% endfor %}
 </ul>

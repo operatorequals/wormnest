@@ -12,7 +12,7 @@ import wormnest.utils as utils
 
 '''
 To run the App:
-FLASK_APP=wormnest/__main__.py python -m flask run --host=127.0.0.1 --port=8080
+python3 app.py
 '''
 app = Flask(__name__)
 
@@ -22,7 +22,7 @@ PORT = os.getenv("PORT", 8000)
 SRV_DIR = os.getenv("SRV_DIR","test_directory/")
 ALIAS_DIGITS_MIN = os.getenv("ALIAS_DIGITS_MIN", 8)
 ALIAS_DIGITS_MAX = os.getenv("ALIAS_DIGITS_MAX", 8)
-LISTING_URL_DIR = 'listing'
+LISTING_URL_DIR = 'list'
 MANAGE_URL_DIR = 'manage'
 REDIRECT_URL = os.getenv(
 	"REDIRECT_URL",
@@ -40,6 +40,25 @@ DEFAULT_PATHS_FILE = os.getenv(
 	"DEFAULT_PATHS_FILE",
 	"urls.default.json"
 	)
+
+def redirect_away():
+	return redirect(REDIRECT_URL, code=302)
+
+def abort_404():
+	return abort(404)
+
+default_miss = abort_404
+on_expired = abort_404
+# default_miss = redirect_away
+on_expired = redirect_away
+
+
+def get_random_alias(length=None):
+	assert ALIAS_DIGITS_MIN <= ALIAS_DIGITS_MAX
+	if length == None:
+		length = random.randint(ALIAS_DIGITS_MIN, ALIAS_DIGITS_MAX)
+	return utils.randomword(length)
+
 
 @app.route('/%s/load_defaults' % MANAGE_URL_DIR)
 def load_defaults():
@@ -63,31 +82,13 @@ def load_defaults():
 	return json.dumps(defaults_url_dict, indent=2)
 
 
-def redirect_away():
-	return redirect(REDIRECT_URL, code=302)
-
-def abort_404():
-	return abort(404)
-
-default_miss = abort_404
-on_expired = abort_404
-# default_miss = redirect_away
-on_expired = redirect_away
-
-
-def get_random_alias(length=None):
-	assert ALIAS_DIGITS_MIN <= ALIAS_DIGITS_MAX
-	if length == None:
-		length = random.randint(ALIAS_DIGITS_MIN, ALIAS_DIGITS_MAX)
-	return utils.randomword(length)
-
-
 @app.route(
 	'/%s/%s/' % (MANAGE_URL_DIR, LISTING_URL_DIR),
 	defaults={'req_path': ''}
 	)
 @app.route('/%s/%s/<path:req_path>' %
- (MANAGE_URL_DIR, LISTING_URL_DIR),)
+		(MANAGE_URL_DIR, LISTING_URL_DIR)
+	)
 def dir_listing(req_path):
 	'''
 	Found here:
@@ -112,27 +113,10 @@ https://stackoverflow.com/questions/23718236/python-flask-browsing-through-direc
 			(f, os.path.join(request.base_url, f))
 		)
 	# print (full_paths)
-
-	return render_template('file.html', files=full_paths)
-
-
-@app.route('/<url_alias>')
-def resolve_url(url_alias):
-	try:
-		resolved_url = db_handler.get_path(url_alias)
-	except KeyError:
-		return default_miss()
-	except utils.LinkExpired:
-		return on_expired()
-
-	if not os.path.isfile(resolved_url.path):
-		return default_miss()
-
-
-	return send_file(
-		resolved_url.path,
-		as_attachment = True,
-		attachment_filename = resolved_url.attachment,
+	add_url_link = "%s%s/add" % (request.url_root, MANAGE_URL_DIR)
+	return render_template('file.html',
+		files=full_paths,
+		add_url=add_url_link
 		)
 
 
@@ -209,6 +193,14 @@ def add_url():
 			link=full_link
 			)
 
+@app.route('/%s/del' % MANAGE_URL_DIR)
+def del_url():
+	alias = request.args.get("alias")
+	try:
+		deleted = db_handler.del_url(alias)
+	except KeyError:
+		deleted = False
+	return "Deleted" if deleted else "NOT deleted"
 
 @app.route('/%s/show' % MANAGE_URL_DIR)
 def show_all(path=None):
@@ -218,6 +210,24 @@ def show_all(path=None):
 				entries = entries
 				)
 
+#	Default Behaviour
+@app.route('/<url_alias>')
+def resolve_url(url_alias):
+	try:
+		resolved_url = db_handler.get_path(url_alias)
+	except KeyError:
+		return default_miss()
+	except utils.LinkExpired:
+		return on_expired()
+
+	if not os.path.isfile(resolved_url.path):
+		return default_miss()
+
+	return send_file(
+		resolved_url.path,
+		as_attachment = True,
+		attachment_filename = resolved_url.attachment,
+		)
 
 def main(*args, **kwargs):
 
