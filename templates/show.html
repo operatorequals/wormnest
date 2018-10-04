@@ -1,0 +1,24 @@
+<html><head><title>
+	URL aliases
+</title></head>	
+
+<table>
+<b>
+	    <tr>
+<td>Real Path</td>
+<td>Alias URL</td>
+<td>Expires after N clicks</td>
+<td>Served as</td>
+    </tr>
+</b>
+
+    {% for entry in entries %}
+    <tr>
+<td>{{ entry.path }}</td>
+<td>/{{ entry.url_alias }}</td>
+<td>{{ entry.expires_after_clicks }}</td>
+<td>{{ entry.attachment }}</td>
+    </tr>
+
+    {% endfor %}
+</table>
