@@ -74,7 +74,7 @@ def show_manage():
 
 @app.route('/%s/load_defaults' % MANAGE_URL_DIR)
 def load_defaults():
-
+	add_url_template = "http://127.0.0.1:{port}/{man}/add?path={path}&alias={alias}&unchecked=True"
 	if DEFAULT_PATHS_FILE:
 		print("[+] Importing defaults from '{}'".format(DEFAULT_PATHS_FILE))
 		import json
@@ -83,12 +83,16 @@ def load_defaults():
 			for path, url_params in defaults_url_dict.items():
 				print(path, url_params)
 				alias = url_params['alias']
-				requests.get(
-	"http://127.0.0.1:{port}/{man}/add?path={path}&alias={alias}&unchecked=True".format(
+				filename = url_params.get('filename',None)
+				print (filename)
+				if filename:
+					add_url_template += '&filename={filename}'
+				requests.get(add_url_template.format(
 						port=PORT,
 						man=MANAGE_URL_DIR,
 						path=path,
 						alias=alias,
+						filename=filename,
 						)
 					)
 	return "<pre>{}</pre>".format(
@@ -253,7 +257,7 @@ def main(*args, **kwargs):
 	app.run(
 		host=IP,
 		port=PORT,
-		debug=True
+		debug=False
 		)
 
 if __name__=="__main__":
