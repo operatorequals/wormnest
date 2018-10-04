@@ -5,7 +5,6 @@ A **Python3** Flask / SQL-Alchemy Web Server for URL minification and manipulate
 
 Heavily inspired by [@bluscreenofjeff](https://github.com/bluscreenofjeff/), and his [great blog post about expiring URLs](https://bluescreenofjeff.com/2016-04-19-expire-phishing-links-with-apache-rewritemap/) I spinned my own version of a web server that serves files, creates custom URLs for them, expires them, and more...
 
-### Uses only Environment Variables for parameter input
 
 
 Install with:
@@ -17,13 +16,12 @@ pip install -r requirements
 
 Run with:
 ```bash
-$ # You can skip that for sane defaults (more below)
-$ export *a bunch of Environment Variables*
+$ export [a bunch of Environment Variables] # Skip that for sane defaults (more below)
 $
 $ python3 app.py
 ```
 
-### The Environment Variables and the *Sane Defaults*
+### The used Environment Variables and the *Sane Defaults*
 ```bash
 IP - defaults to "0.0.0.0"
 PORT - defaults to 8000
