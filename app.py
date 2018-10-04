@@ -114,6 +114,10 @@ def resolve_url(url_alias):
 	except utils.LinkExpired:
 		return on_expired()
 
+	if not os.path.isfile(resolved_url.path):
+		return default_miss()
+
+
 	return send_file(
 		resolved_url.path,
 		as_attachment = True,
