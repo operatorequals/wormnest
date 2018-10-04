@@ -56,10 +56,8 @@ def dir_listing(req_path):
 	Found here:
 https://stackoverflow.com/questions/23718236/python-flask-browsing-through-directory-with-files
 	'''
-	BASE_DIR = SRV_DIR
-
 	# Joining the base and the requested path
-	abs_path = os.path.join(BASE_DIR, req_path)
+	abs_path = os.path.join(SRV_DIR, req_path)
 
 	# Return 404 if path doesn't exist
 	if not os.path.exists(abs_path):
@@ -71,7 +69,14 @@ https://stackoverflow.com/questions/23718236/python-flask-browsing-through-direc
 
 	# Show directory contents
 	files = os.listdir(abs_path)
-	return render_template('file.html', files=files)
+	full_paths = []
+	for f in files:
+		full_paths.append(
+			(f, os.path.join(request.base_url, f))
+		)
+	# print (full_paths)
+
+	return render_template('file.html', files=full_paths)
 
 
 @app.route('/<url_alias>')
@@ -92,6 +97,7 @@ def resolve_url(url_alias):
 
 @app.route('/%s/add' % MANAGE_URL_DIR)
 def add_url():
+
 	path = request.args.get("path")
 	expires = request.args.get("clicks")
 	alias = request.args.get("alias")
@@ -122,7 +128,7 @@ def add_url():
 			if USE_ORIGINAL_EXTENSION:
 				attach_name += original_extension
 
-
+	path = os.path.join(SRV_DIR, path)
 	if not os.path.isfile(path):
 		return render_template(
 			'custom_error.html', 
