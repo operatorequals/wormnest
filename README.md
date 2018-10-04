@@ -58,7 +58,6 @@ to serve `metasploit/generated/meter_pinning_443.exe` with a `"Content-Dispositi
 * `http[s]://payload-server:8000/android`
 to serve `metasploit/generated/meter_pinning_443.apk` with the default filename of `ClientDesktopApp` and the file's original extension (`USE_ORIGINAL_EXTENSION` parameter).
 Hence `ClientDesktopApp.apk` will be placed in the `"Content-Disposition" HTTP Header`.
-```
 
 
 ## Securing your *Worm Nest*!
