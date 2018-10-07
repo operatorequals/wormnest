@@ -41,7 +41,7 @@ This will serve a file named "*fight_club_xvid_1999*.**hta**", and will only las
 #### Play it again, Johny Guitar
 Let's serve the **same file**, without any expiration, with **a random alias** ([TinyURL](https://tinyurl.com) style), and a "*SergioLeoneCollection_TheGoodTheBadAndTheUgly(1966)_subs-Autoplay*.**hta**" filename.
 ```
-http://localhost:8000/manage/add?path=path/to/some/veryevil.hta&alias=SergioLeoneCollection_TheGoodTheBadAndTheUgly(1966)_subs-Autoplay.hta
+http://localhost:8000/manage/add?path=path/to/some/veryevil.hta&filename=SergioLeoneCollection_TheGoodTheBadAndTheUgly(1966)_subs-Autoplay.hta
 ```
 This will produce an 8 (by default) character, random ASCII string alias, like `/J3jcrZqd` that will prompt for a `SergioLeoneCollection_TheGoodTheBadAndTheUgly(1966)_subs-Autoplay.hta` download, and it will contain (of course) the `veryevil.hta` contents.
 
