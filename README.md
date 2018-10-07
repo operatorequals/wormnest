@@ -112,6 +112,13 @@ Hence `ClientDesktopApp.apk` will be placed in the `"Content-Disposition" HTTP H
 ### For *Cobalt Strikers*
 Generating payloads from the CS client directly to the (remote) *Worm Nest* deployment is as simple as [`sshfs`](https://github.com/libfuse/sshfs) to that served directory (`SRV_DIR`). People tend to forget that `scp` is by far NOT THE ONLY WAY!
 
+A simple:
+```bash
+mkidr -p ~/cs_payloads
+sshfs user@payloadserver:/place/where/wormnest/SRV_DIR/points ~/cs_payloads
+```
+and then you can drop *artifacts* in `cs_payloads` directory and list them under `http://payloadserver:8000/manage/list`, ready for aliasing and serving!
+
 ## A Simple Deployment Scenario
 
 ##### wormnest.sh
