@@ -5,8 +5,58 @@ A **Python3** Flask / SQL-Alchemy Web Server for *URL Minification* and *Manipul
 
 Heavily inspired by [@bluscreenofjeff](https://github.com/bluscreenofjeff/), and his [great blog post about expiring URLs](https://bluescreenofjeff.com/2016-04-19-expire-phishing-links-with-apache-rewritemap/) I spinned my own version of a web server that serves files, creates custom URLs for them, expires them, and more...
 
+## Showcase:
+### Access the interface with:
+```
+http://localhost:8000/manage/
+```
+It's pure HTML, no CSS nonsense, no JS engine has been harmed. No AJAX, no cookies, no hassles. **Just working HTML**.
 
+### Usage:
+If we need to:
+* serve an `HTA` file available at `path/to/some/veryevil.hta`
+* through some **custom link**
+* with some **filename that is not suspicious**
+* that will **expire after 5 downloads**
 
+we can issue the following GET request to `wormnest`:
+
+### Add URL Aliases
+```php
+# Splitting the URL parameters for readability
+http://localhost:8000/manage/add?
+path=path/to/some/veryevil.hta&
+alias=fight_club_xvid_1999.avi&
+filename=fight_club_xvid_1999.hta&
+clicks=5
+# Unsplit:
+http://localhost:8000/manage/add?path=path/to/some/veryevil.hta&alias=fight_club_xvid_1999.avi&filename=fight_club_xvid_1999.hta&clicks=5
+```
+This will create an *alias URL* for the `path/to/some/veryevil.hta`, making the serving as easy as:
+```
+http://payload-server:8000/fight_club_xvid_1999.avi
+```
+This will serve a file named "*fight_club_xvid_1999*.**hta**", and will only last *5 clicks*!
+
+#### Play it again, Johny Guitar
+Let's serve the **same file**, without any expiration, with **a random alias** ([TinyURL](https://tinyurl.com) style), and a "*SergioLeoneCollection_TheGoodTheBadAndTheUgly(1966)_subs-Autoplay*.**hta**" filename.
+```
+http://localhost:8000/manage/add?path=path/to/some/veryevil.hta&alias=SergioLeoneCollection_TheGoodTheBadAndTheUgly(1966)_subs-Autoplay.hta
+```
+This will produce an 8 (by default) character, random ASCII string alias, like `/J3jcrZqd` that will prompt for a `SergioLeoneCollection_TheGoodTheBadAndTheUgly(1966)_subs-Autoplay.hta` download, and it will contain (of course) the `veryevil.hta` contents.
+
+### Delete URL Aliases
+If, for some reason, you need to make the `/fight_club_xvid_1999.avi` unavailable (some phishing email is getting examined?), then a:
+```php
+http://localhost:8000/manage/del?alias=fight_club_xvid_1999.avi
+```
+will do! That means that either a `404 Error` or a `302 Redirect` will occur on access to the URL:
+```
+http://payload-server:8000/fight_club_xvid_1999.avi
+```
+
+## Install - Setup - Deploy
+---
 Install with:
 ```bash
 git clone https://github.com/operatorequals/wormnest/   # stick to a git tag for production
@@ -99,12 +149,14 @@ python3 app.py
 #!/bin/bash
 tmux new -s wormnest -d 'bash wormnest.sh'
 ```
-Having in mind mass-deployment environments (looking at you [Red Baron](https://github.com/Coalfire-Research/Red-Baron)), such scripts come in handy.
+Having in mind mass-deployment environments (looking at you [Red Baron](https://github.com/Coalfire-Research/Red-Baron)), such scripts come in handy. In the `terraform` case, a `remote-exec` provisioner can replace the need for `wormnest_start.sh`.
 
 ## Securing your *Worm Nest*!
 There is **no authentication** for the management endpoint of this service. This effectively means that anyone going under the `/manage/` directory will be able to *see, add, delete all* URL aliases, and *list the whole served directory*.
 
 Yet, adding authentication, is (at least at this point) out of scope. That's why the `MANAGE_URL_DIR` exists in the first place. A *passwordish* string here will prevent anyone (not able to guess it) to reach the management endpoint. A password in the URL sucks (I now), but combined with some HTTPS (needed in case of actual use), and with no Intercepting HTTP Proxy between your host and the *Worm Nest* deployment you'll be good enough!
+
+Or even hiding the whole `wormnest` behind an *Apache mod_rewrite proxy* would also work (and add the desired SSL, while redirecting away the `/manage/` attempts).
 
 Have Fun!
 
