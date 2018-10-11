@@ -59,6 +59,14 @@ MANAGE_URL_DIR = os.getenv("MANAGE_URL_DIR", 'manage')
 if MANAGE_URL_DIR == '*':
 	MANAGE_URL_DIR = get_random_alias(12)
 
+MISS = os.getenv("MISS", 'abort')
+EXPIRE = os.getenv("EXPIRE", 'abort')
+
+behaviors = {
+	'abort' : default_miss,
+	'redir' : on_expired,
+}
+
 log_spawn(MANAGE_URL_DIR, PORT)
 
 
@@ -85,10 +93,8 @@ def redirect_away():
 def abort_404():
 	return abort(404)
 
-default_miss = abort_404
-on_expired = abort_404
-# default_miss = redirect_away
-on_expired = redirect_away
+default_miss = behaviors[MISS]
+on_expired = behaviors[EXPIRE]
 
 
 
