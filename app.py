@@ -4,8 +4,11 @@ from flask import request,send_file,redirect,render_template, abort
 
 import os
 import random
+import imp
 
 import requests
+import hooker
+hooker.EVENTS.append(["on_request"])
 
 import wormnest.db_handler as db_handler
 import wormnest.utils as utils
@@ -15,7 +18,6 @@ To run the App:
 python3 app.py
 '''
 app = Flask(__name__)
-
 
 def get_random_alias(length=None):
 	assert ALIAS_DIGITS_MIN <= ALIAS_DIGITS_MAX
@@ -63,11 +65,7 @@ if MANAGE_URL_DIR == '*':
 MISS = os.getenv("MISS", 'abort')
 EXPIRE = os.getenv("EXPIRE", 'abort')
 
-
-
 LOG_SPAWN_FILE = os.getenv("LOG_SPAWN_FILE", "wormnest.mgmt_route.txt")
-
-
 
 REDIRECT_URL = os.getenv(
 	"REDIRECT_URL",
@@ -84,6 +82,16 @@ USE_ORIGINAL_EXTENSION = os.getenv(
 DEFAULT_PATHS_FILE = os.getenv(
 	"DEFAULT_PATHS_FILE",
 	"urls.default.json"
+	)
+
+HOOK_SCRIPTS = os.getenv("HOOK_SCRIPTS","")
+hook_list = enumerate(HOOK_SCRIPTS.split(":"))
+for i, hook in hook_list:
+	if hook == '': continue
+	print("[+] Loading hook {}".format(hook))
+	ext_module = imp.load_source(
+		'hook_{}'.format(i),
+		hook
 	)
 
 def redirect_away():
@@ -283,11 +291,29 @@ def resolve_url(url_alias):
 	except utils.LinkExpired:
 		return on_expired()
 
-	if not os.path.isfile(resolved_url.path):
-		return default_miss()
+	# Run the hooks for iconic filenames
+	returned_file = resolved_url.path
+	hook_ret = {}
+	hooker.EVENTS["on_request"](
+		filename=resolved_url.path,
+		retval=hook_ret
+		)
+	fd = hook_ret['fd']
+	if fd:
+		print(
+			"[+] Filename '{}' HOOKED! A Custom file is served!".format(
+				resolved_url.path
+				)
+			)
+		# If it succeds the returned fd will be served 
+		returned_file = fd
+	else:
+		# Else check if the file is real
+		if not os.path.isfile(resolved_url.path):
+			return default_miss()
 
 	return send_file(
-		resolved_url.path,
+		filename_or_fp = returned_file,
 		as_attachment = True,
 		attachment_filename = resolved_url.attachment,
 		)

@@ -14,3 +14,11 @@ https://stackoverflow.com/questions/2030053/random-strings-in-python
 class LinkExpired(Exception):
 	''' This Exception is raised when a link is expired! '''
 	pass
+
+
+def check_filename_for_hook(filename, hook_name):
+	toks = filename.split('.')
+	if len(toks) < 3: return False
+
+	but_last_tok = toks[-2]
+	return but_last_tok == hook_name
