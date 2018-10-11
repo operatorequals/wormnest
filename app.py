@@ -306,11 +306,10 @@ def resolve_url(url_alias):
 		returned_file = fd
 	else:
 		# Else check if the file is real
-		if not os.path.isfile(resolved_url.path):
+		if not os.path.isfile(returned_file):
 			return default_miss()
 
-	return send_from_directory(
-		SRV_DIR,
+	return send_file(
 		filename_or_fp = returned_file,
 		as_attachment = True,
 		attachment_filename = resolved_url.attachment,
