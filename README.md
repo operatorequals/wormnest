@@ -78,11 +78,15 @@ PORT - defaults to 8000
 SRV_DIR - defaults to "test_directory/"
 ALIAS_DIGITS_MIN - defaults to 8
 ALIAS_DIGITS_MAX - defaults to 8
-MANAGE_URL_DIR - defaults to 'manage' # NO SLASHES HERE!
+MANAGE_URL_DIR - defaults to 'manage'. Random String if "*" is used. Logged in  # NO SLASHES HERE!
 REDIRECT_URL - defaults to "https://amazon.com"
 DEFAULT_FILENAME - defaults to "ClientDesktopApp"
 USE_ORIGINAL_EXTENSION - defaults to "True" # Uses the extension of the Original file
 DEFAULT_PATHS_FILE - defaults to "urls.default.json"
+MISS - defaults to "abort". If non-existent Alias is used. Values: [redir|abort]
+EXPIRED - defaults to "abort". If expired Alias is used. Values: [redir|abort]
+LOG_SPAWN_FILE - defaults to "wormnest.mgmt_route.txt". Logs lines like "/MANAGE_URL_DIR PORT date" for all runs
+
 ```
 
 ### The "*urls.default.json*"
