@@ -19,6 +19,14 @@ python3 app.py
 '''
 app = Flask(__name__)
 
+@app.after_request
+def add_header(response):
+    response.headers['Cache-Control'] = 'no-store'
+    del response.headers['Expires']
+    response.headers['Server'] = "Apache httpd 2.2.10"	# Intentionally old
+    del response.headers['Date']
+    return response
+
 def get_random_alias(length=None):
 	assert ALIAS_DIGITS_MIN <= ALIAS_DIGITS_MAX
 	if length == None:
@@ -294,7 +302,7 @@ def resolve_url(url_alias):
 	hooker.EVENTS["on_request"](
 		filename=resolved_url.path,
 		request=request,
-		retval=hook_ret
+		retvals=hook_ret
 		)
 	fd = hook_ret.get('fd', None)
 	if fd:
