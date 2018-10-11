@@ -16,14 +16,52 @@ python3 app.py
 '''
 app = Flask(__name__)
 
+
+def get_random_alias(length=None):
+	assert ALIAS_DIGITS_MIN <= ALIAS_DIGITS_MAX
+	if length == None:
+		length = random.randint(ALIAS_DIGITS_MIN, ALIAS_DIGITS_MAX)
+	return utils.randomword(length)
+
+
+def log_spawn(mgmt_key, port):
+	import time
+	now = time.strftime("%c")
+	manage_key_file = "wormnest.mgmt_route.txt"
+	print (
+		"[!] The Management Route is '{}'\nNoted in '{}'".format(
+			mgmt_key,
+			manage_key_file
+		)
+	)
+	with open(manage_key_file, 'a') as f:
+		f.write("/{} - {} - ({})\n".format(
+			mgmt_key,
+			port,
+			now
+			)
+		)	
+
 IP = os.getenv("IP", "0.0.0.0")
 PORT = os.getenv("PORT", 8000)
 
 SRV_DIR = os.getenv("SRV_DIR","test_directory/")
+try:
+	os.mkdir(SRV_DIR)
+	print("[+] Directory: '{}' created!".format(SRV_DIR))
+except Exception as e:
+	print("[+] Directory: '{}' found!".format(SRV_DIR))
+
 ALIAS_DIGITS_MIN = os.getenv("ALIAS_DIGITS_MIN", 8)
 ALIAS_DIGITS_MAX = os.getenv("ALIAS_DIGITS_MAX", 8)
-LISTING_URL_DIR = 'list'
-MANAGE_URL_DIR = 'manage'
+
+MANAGE_URL_DIR = os.getenv("MANAGE_URL_DIR", 'manage')
+if MANAGE_URL_DIR == '*':
+	MANAGE_URL_DIR = get_random_alias(12)
+
+log_spawn(MANAGE_URL_DIR, PORT)
+
+
 REDIRECT_URL = os.getenv(
 	"REDIRECT_URL",
 	'https://amazon.com'
@@ -52,12 +90,6 @@ on_expired = abort_404
 # default_miss = redirect_away
 on_expired = redirect_away
 
-
-def get_random_alias(length=None):
-	assert ALIAS_DIGITS_MIN <= ALIAS_DIGITS_MAX
-	if length == None:
-		length = random.randint(ALIAS_DIGITS_MIN, ALIAS_DIGITS_MAX)
-	return utils.randomword(length)
 
 
 # @app.route('/%s/' % MANAGE_URL_DIR)
@@ -100,12 +132,10 @@ def load_defaults():
 		)
 
 @app.route(
-	'/%s/%s/' % (MANAGE_URL_DIR, LISTING_URL_DIR),
+	'/%s/list/' % MANAGE_URL_DIR,
 	defaults={'req_path': ''}
 	)
-@app.route('/%s/%s/<path:req_path>' %
-		(MANAGE_URL_DIR, LISTING_URL_DIR)
-	)
+@app.route('/%s/list/<path:req_path>' % MANAGE_URL_DIR)
 def dir_listing(req_path):
 	'''
 	Found here:
