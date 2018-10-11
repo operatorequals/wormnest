@@ -55,6 +55,72 @@ will do! That means that either a `404 Error` or a `302 Redirect` will occur on 
 http://payload-server:8000/fight_club_xvid_1999.avi
 ```
 
+
+## Hooking the GET like never before *and the `unchecked` flag*
+
+The above work well for static files. But when Penetration Testing, there is the need to serve payloads *that are different from time to time*, just to be sure you *don't generate any signatures* during the assessment.
+Well, again, as [@bluscreenofjeff](https://github.com/bluscreenofjeff/) taught in [this blog post](https://bluescreenofjeff.com/2014-04-17-Fresh-Veil-Automatically-Generating-Payloads/), you can generate payloads every some minutes, just in case to be sure that the Incident Response guys will not get what you first served.
+
+But what about, generate a new payload in each click?
+Meet hooks. Meet the [hooker](https://github.com/satori-ng/hooker).
+
+As of `0.3.0`, the directory `hooks/` will contain python *hooks*, that will run when certain GET requests are issued.
+Hooks can be imported using the `HOOK_SCRIPTS` environment variable, and have to be separated by colon (`:`), Like ` HOOK_SCRIPTS=hook1.py:hook2.py`.
+
+### Breaking down the `hooks/serve_random.py` hook:
+```python
+'''
+This hook serves random data when a certain filename is requests
+Serves as Hook Coding Example/Template. No Practical use...
+'''
+import hooker
+from wormnest.utils import check_filename_for_hook
+import os, sys
+import tempfile
+
+@hooker.hook("on_request")  # <-- This declares a hook when a GET request is made
+def serve_random(filename, request, retval={}):
+'''
+filename: The filename that is registered as returned file. Most of the time non-existent
+request: The Flask request object that triggered the hook
+retval: Hooker reserved dict. The return value is expected in the 'fd' key.
+'''
+  # Standard code, checks if the requested filename contains this function's name before the last dot.
+  # This is used as sign to trigger the rest of the code.
+	func_name = sys._getframe().f_code.co_name
+	if not check_filename_for_hook(filename, func_name):
+		return None
+
+  # A Temporary File is created - read only
+	fd = tempfile.NamedTemporaryFile('rb')
+	generated_file = fd.name
+
+  # A 'dd' command to get random data populated in the file
+	command = "dd if=/dev/urandom of={} count=128".format(generated_file)
+	print("[!] '{}'".format(command))
+	os.system(command)
+
+  # The file is returned using the 'hookers' interface
+	retval['fd'] = fd
+  # Irrelevant
+	return fd
+```
+Loading it and running is easy as `HOOK_SCRIPTS=hooks/serve_random.py python3 app.py`.
+Now, to trigger the hook we need a file with `serve_random` in its filename to be aliased. So:
+```
+http://wormnest:8080/manage/add?path=hook.serve_random.dat&alias=hooktest
+```
+But this returns an error, about non-existing `hook.serve_random.dat` file.
+That's why `unchecked` exists:
+```
+http://wormnest:8080/manage/add?path=hook.serve_random.dat&alias=hooktest&unchecked=true
+```
+Now `http://wormnest:8080/hooktest` is accessible, and will return a file with random contents (on each request).
+Test it with `wget http://wormnest:8080/hooktest`!
+
+----
+
+
 ## Install - Setup - Deploy
 ---
 Install with:
@@ -161,6 +227,7 @@ python3 app.py
 tmux new -s wormnest -d 'bash wormnest.sh'
 ```
 Having in mind mass-deployment environments (looking at you [Red Baron](https://github.com/Coalfire-Research/Red-Baron)), such scripts come in handy. In the `terraform` case, a `remote-exec` provisioner can replace the need for `wormnest_start.sh`.
+
 
 ## Securing your *Worm Nest*!
 There is **no authentication** for the management endpoint of this service. This effectively means that anyone going under the `/manage/` directory will be able to *see, add, delete all* URL aliases, and *list the whole served directory*.
