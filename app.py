@@ -24,10 +24,11 @@ def get_random_alias(length=None):
 	return utils.randomword(length)
 
 
-def log_spawn(mgmt_key, port):
+def log_spawn(filename, mgmt_key, port):
 	import time
 	now = time.strftime("%c")
-	manage_key_file = "wormnest.mgmt_route.txt"
+	manage_key_file = filename
+	
 	print (
 		"[!] The Management Route is '{}'\nNoted in '{}'".format(
 			mgmt_key,
@@ -62,12 +63,10 @@ if MANAGE_URL_DIR == '*':
 MISS = os.getenv("MISS", 'abort')
 EXPIRE = os.getenv("EXPIRE", 'abort')
 
-behaviors = {
-	'abort' : default_miss,
-	'redir' : on_expired,
-}
 
-log_spawn(MANAGE_URL_DIR, PORT)
+
+LOG_SPAWN_FILE = os.getenv("LOG_SPAWN_FILE", "wormnest.mgmt_route.txt")
+
 
 
 REDIRECT_URL = os.getenv(
@@ -93,9 +92,16 @@ def redirect_away():
 def abort_404():
 	return abort(404)
 
-default_miss = behaviors[MISS]
-on_expired = behaviors[EXPIRE]
+behaviors = {
+	'abort' : abort_404,
+	'redir' : redirect_away,
+}
 
+default_miss = behaviors.get(MISS,'abort')
+on_expired = behaviors.get(EXPIRE,'abort')
+
+
+log_spawn(LOG_SPAWN_FILE, MANAGE_URL_DIR, PORT)
 
 
 # @app.route('/%s/' % MANAGE_URL_DIR)
