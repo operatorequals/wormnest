@@ -8,11 +8,11 @@ import os, sys
 import tempfile
 
 @hooker.hook("on_request")  # <-- This declares a hook when a GET request is made
-def serve_random(filename, request, retval={}):
+def serve_random(filename, request, retvalss={}):
 	'''
 filename: The filename that is registered as returned file. Most of the time non-existent
 request: The Flask request object that triggered the hook
-retval: Hooker reserved dict. The return value is expected in the 'fd' key.
+retvals: Hooker reserved dict. The return value is expected in the 'fd' key.
 	'''
   # Standard code, checks if the requested filename contains this function's name before the last dot.
   # This is used as sign to trigger the rest of the code.
@@ -30,6 +30,6 @@ retval: Hooker reserved dict. The return value is expected in the 'fd' key.
 	os.system(command)
 
   # The file is returned using the 'hookers' interface
-	retval['fd'] = fd
+	retvals['fd'] = fd
   # Irrelevant
 	return fd
