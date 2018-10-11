@@ -13,19 +13,9 @@ def serve_random(filename, retval={}):
 	fd = tempfile.NamedTemporaryFile('rb')
 	generated_file = fd.name
 
-	# generated_file = "/tmp/rand_gen"
 	command = "dd if=/dev/urandom of={} count=128".format(generated_file)
 	print("[!] '{}'".format(command))
 	os.system(command)
-
-	# try:
-	# 	# fd = open(generated_file, 'rb')
-	# 	fd = TemporaryFile(generated_file, 'rb')
-	# except FileNotFoundError:
-	# 	print ("[-] Could not Return the Fresh MSF payload")
-	# 	fd = None
-	# except Exception:
-	# 	print ("[-] " + e)
 
 	retval['fd'] = fd
 	return fd
