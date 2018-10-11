@@ -118,7 +118,7 @@ http://wormnest:8080/manage/add?path=hook.serve_random.dat&alias=hooktest&unchec
 Now `http://wormnest:8080/hooktest` is accessible, and will return a file with random contents (on each request).
 Test it with `wget http://wormnest:8080/hooktest`!
 
-And in case you need something more useful, check the `hooks/autogen_msf.py`. And you can also code you rown hooks...
+And in case you need something more useful, check the `hooks/autogen_msf.py`. Or the *Random File Picker hook* in `hooks/random_from_directory.py`. And you can always code your own hooks...
 
 ----
 
