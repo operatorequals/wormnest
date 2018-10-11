@@ -184,7 +184,7 @@ def add_url():
 
 	path = request.args.get("path")
 	expires = request.args.get("clicks", -1)
-	alias = request.args.get("alias")
+	alias = request.args.get("alias", get_random_alias())
 	attach_name = request.args.get("filename")
 	unchecked_path = request.args.get("unchecked", False)
 	if not request.args:
@@ -197,7 +197,7 @@ def add_url():
 	except Exception as e:
 		return render_template(
 			'custom_error.html', 
-			error_msg=e
+			error_msg="The 'path' variable does not validate"
 			)
 
 	if original_filename == original_extension:
@@ -222,9 +222,6 @@ def add_url():
 			'custom_error.html', 
 			error_msg="The path '{}' is NOT a file".format(path)
 			)
-
-	if not alias:
-		alias = get_random_alias()
 
 	try:
 		if expires is not None: 
@@ -286,7 +283,8 @@ def resolve_url(url_alias):
 	if not os.path.isfile(resolved_url.path):
 		return default_miss()
 
-	return send_file(
+	return send_from_directory(
+		SRV_DIR,
 		resolved_url.path,
 		as_attachment = True,
 		attachment_filename = resolved_url.attachment,
