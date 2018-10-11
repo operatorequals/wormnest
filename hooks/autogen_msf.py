@@ -13,7 +13,7 @@ PAYLOAD = "windows/meterpreter/reverse_https"
 
 
 @hooker.hook("on_request")
-def autogen_msf(filename, retval = {}):
+def autogen_msf(filename, request, retval = {}):
 	func_name = sys._getframe().f_code.co_name
 	if not check_filename_for_hook(filename, func_name):
 		return None

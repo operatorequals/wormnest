@@ -293,6 +293,7 @@ def resolve_url(url_alias):
 	hook_ret = {}
 	hooker.EVENTS["on_request"](
 		filename=resolved_url.path,
+		request=request,
 		retval=hook_ret
 		)
 	fd = hook_ret.get('fd', None)
