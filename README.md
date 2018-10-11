@@ -70,7 +70,7 @@ Hooks can be imported using the `HOOK_SCRIPTS` environment variable, and have to
 ### Breaking down the `hooks/serve_random.py` hook:
 ```python
 '''
-This hook serves random data when a certain filename is requests
+This hook serves random data when a certain filename is requested
 Serves as Hook Coding Example/Template. No Practical use...
 '''
 import hooker
@@ -82,7 +82,7 @@ import tempfile
 def serve_random(filename, request, retval={}):
 '''
 filename: The filename that is registered as returned file. Most of the time non-existent
-request: The Flask request object that triggered the hook
+request: The Flask Request object that triggered the hook
 retval: Hooker reserved dict. The return value is expected in the 'fd' key.
 '''
   # Standard code, checks if the requested filename contains this function's name before the last dot.
@@ -117,6 +117,8 @@ http://wormnest:8080/manage/add?path=hook.serve_random.dat&alias=hooktest&unchec
 ```
 Now `http://wormnest:8080/hooktest` is accessible, and will return a file with random contents (on each request).
 Test it with `wget http://wormnest:8080/hooktest`!
+
+And in case you need something more useful, check the `hooks/autogen_msf.py`. And you can also code you rown hooks...
 
 ----
 
