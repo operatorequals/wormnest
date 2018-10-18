@@ -67,6 +67,27 @@ Meet hooks. Meet the [hooker](https://github.com/satori-ng/hooker).
 As of `0.3.0`, the directory `hooks/` will contain python *hooks*, that will run when certain GET requests are issued.
 Hooks can be imported using the `HOOK_SCRIPTS` environment variable, and have to be separated by colon (`:`), Like ` HOOK_SCRIPTS=hook1.py:hook2.py`.
 
+### Hooks:
+#### `hooks/os_dependent_serve.py`
+This hook reads the request's *User-Agent* and serves a different alias depending on strings found in it.
+Supports both *HTTP Redirect* and *Transparent Proxy* mode!
+
+*Needs Manual Configuration before launching*
+
+#### `hooks/random_from_directory.py`
+This hook serves a random file from within a set directory.
+
+#### `hooks/autogen_msf.py`
+Proof-of-Concept per-request payload generator. It uses `msfvenom` by breaking to a `system()` shell.
+Could work with [EVER](https://github.com/Veil-Framework/Veil-Evasion) [YTH](https://github.com/trustedsec/unicorn) [ING](https://www.shellterproject.com/) (that has non-interactive interface).
+Beware that *(time-to-generate) > (TCP-timeout) = True* for some tools...
+
+*Needs Manual Configuration before launching*
+
+#### `hooks/req_log_hook.py`
+This hook logs a `HTTP-Method User-Agent URL` for each request. Mostly a proof of concept for stats and measurements.
+
+
 ### Breaking down the `hooks/serve_random.py` hook:
 ```python
 '''
