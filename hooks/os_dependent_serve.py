@@ -1,8 +1,7 @@
 """
-This hook serves a random file in an existing directory.
-The 'path' when using the /add endpoint has to point to that directory.
+This hook serves a different wormnest alias
+depending on string found in Request's User Agent
 
-Useful 
 """
 import hooker
 from wormnest.utils import check_filename_for_hook
@@ -13,6 +12,13 @@ import random
 import urllib3
 import io
 
+'''
+This dict has keys/values of String/Alias.
+If a key is found in the processed user agent,
+the response will serve the corresponding alias 
+
+Please configure according to the needs:
+'''
 UA_Urls =  {
 	
 	'win' : "",
@@ -23,6 +29,11 @@ UA_Urls =  {
 	'DEFAULT' : "goaway"
 }
 
+'''
+This hook can serve using 2 Behaviors:
+PROXY: serves the file directly from the alias that triggered the hook (no change in client's URL bar)
+REDIRECT: serves a 302 HTTP Redirect to the corresponding alias
+'''
 Behaviors = ['PROXY', "REDIRECT"]
 Behavior = Behaviors[1]
 
