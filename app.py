@@ -305,6 +305,8 @@ def resolve_url(url_alias):
 		retvals=hook_ret
 		)
 	fd = hook_ret.get('fd', None)
+	resp = hook_ret.get('resp', None)
+
 	if fd:
 		print(
 			"[+] Filename '{}' HOOKED! A Custom file is served!".format(
@@ -313,6 +315,14 @@ def resolve_url(url_alias):
 			)
 		# If it succeds the returned fd will be served 
 		returned_file = fd
+	elif resp:
+		print(
+			"[+] Filename '{}' HOOKED! A Custom response is served!".format(
+				resolved_url.path
+				)
+			)
+		return resp
+
 	else:
 		# Else check if the file is real
 		if not os.path.isfile(returned_file):
