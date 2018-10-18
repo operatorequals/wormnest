@@ -3,7 +3,7 @@
 
 A **Python3** Flask / SQL-Alchemy Web Server for *URL Minification* and *Manipulated File Serving*.
 
-Heavily inspired by [@bluscreenofjeff](https://github.com/bluscreenofjeff/) and *Cobalt Strike's Web Server* ([References](https://github.com/operatorequals/wormnest/wiki/References), a Web Server that does it all!
+Heavily inspired by [@bluscreenofjeff](https://github.com/bluscreenofjeff/) and *Cobalt Strike's Web Server* ([References](https://github.com/operatorequals/wormnest/wiki/References)), a Web Server that does it all!
 
 ## Showcase:
 ### Access the interface with:
