@@ -1,6 +1,8 @@
 
 from flask import Flask
-from flask import request,send_file,send_from_directory,redirect,render_template, abort
+from flask import flash,request,send_file,send_from_directory,redirect,render_template, abort
+
+from werkzeug.utils import secure_filename
 
 import os
 import random
@@ -21,11 +23,11 @@ app = Flask(__name__)
 
 @app.after_request
 def add_header(response):
-    response.headers['Cache-Control'] = 'no-store'
-    del response.headers['Expires']
-    response.headers['Server'] = "Apache httpd 2.2.10"	# Intentionally old
-    del response.headers['Date']
-    return response
+	response.headers['Cache-Control'] = 'no-store'
+	del response.headers['Expires']
+	response.headers['Server'] = "Apache httpd 2.2.10"	# Intentionally old
+	del response.headers['Date']
+	return response
 
 def get_random_alias(length=None):
 	assert ALIAS_DIGITS_MIN <= ALIAS_DIGITS_MAX
@@ -62,6 +64,8 @@ try:
 	print("[+] Directory: '{}' created!".format(SRV_DIR))
 except Exception as e:
 	print("[+] Directory: '{}' found!".format(SRV_DIR))
+
+app.config['UPLOAD_FOLDER'] = SRV_DIR
 
 ALIAS_DIGITS_MIN = os.getenv("ALIAS_DIGITS_MIN", 8)
 ALIAS_DIGITS_MAX = os.getenv("ALIAS_DIGITS_MAX", 8)
@@ -285,6 +289,50 @@ def show_all(path=None):
 				'show.html',
 				entries = entries
 				)
+
+
+@app.route(
+	'/%s/upload' % MANAGE_URL_DIR,
+	methods=['POST', 'GET']
+	)
+def file_upload():
+	if request.method == 'POST':
+		# check if the post request has the file part
+		if 'file' not in request.files:
+			flash('No file part')
+			return redirect(request.url)
+		file = request.files['file']
+		# if user does not select file, browser also
+		# submit a empty part without filename
+		if file.filename == '':
+			flash('No selected file')
+			return redirect(request.url)
+		if file:
+			filename = request.form.get('filename', file.filename)
+			filename = secure_filename(filename)
+			file.save(
+				os.path.join(
+					app.config['UPLOAD_FOLDER'],
+					filename
+					)
+				)
+
+			if request.form.get("create_alias",
+				default = False,
+				type = bool):
+				return redirect(
+					"{manage_url}/add?path={filepath}".format(
+						manage_url = MANAGE_URL_DIR,
+						filepath = filename
+						)
+					)
+			return redirect(request.url)
+
+	return render_template(
+				'upload_page.html',
+				manage_url = MANAGE_URL_DIR
+			)
+				
 
 #	Default Behaviour
 @app.route('/<url_alias>')

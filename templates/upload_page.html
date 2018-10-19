@@ -1,0 +1,47 @@
+<html><head>
+<title>
+File Upload
+</title>
+</head>
+<body>
+
+<h2>Upload a file to Wormnest</h2>
+<br>
+
+  <form action="upload" method="post" enctype="multipart/form-data">
+  	<table>
+  		<tr>
+  	<td>
+  	File:
+  </td>
+  <td>
+	<input type="file" name="file">
+	</td>
+		</tr>
+
+	<tr>
+		<td>
+	Filename to store:
+		</td>
+		<td>
+	<input type="text" name="filename" value=""><br>
+		</td>
+	</tr>
+	
+	<tr>
+		<td>
+	Automatically create URL alias:
+		</td>
+		<td>
+	<input type="checkbox" name="create_alias" value="True">
+		</td>
+	</tr>
+	<tr>
+		<td>
+<button type="submit" value="Upload">Submit</button>
+		</td>
+	</tr>
+  </form>
+
+  	</body>
+</html>
