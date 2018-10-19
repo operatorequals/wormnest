@@ -3,7 +3,7 @@
 
 A **Python3** Flask / SQL-Alchemy Web Server for *URL Minification* and *Manipulated File Serving*.
 
-Heavily inspired by [@bluscreenofjeff](https://github.com/bluscreenofjeff/), and his [great blog post about expiring URLs](https://bluescreenofjeff.com/2016-04-19-expire-phishing-links-with-apache-rewritemap/) I spinned my own version of a web server that serves files, creates custom URLs for them, expires them, and more...
+Heavily inspired by [@bluscreenofjeff](https://github.com/bluscreenofjeff/) and *Cobalt Strike's Web Server* ([References](https://github.com/operatorequals/wormnest/wiki/References)), a Web Server that does it all!
 
 ## Showcase:
 ### Access the interface with:
@@ -161,46 +161,9 @@ $ python3 app.py
 ```
 
 ### The used Environment Variables and the *Sane Defaults*
-```bash
-IP - defaults to "0.0.0.0"
-PORT - defaults to 8000
-SRV_DIR - defaults to "test_directory/"
-ALIAS_DIGITS_MIN - defaults to 8
-ALIAS_DIGITS_MAX - defaults to 8
-MANAGE_URL_DIR - defaults to 'manage'. Random String if "*" is used. Logged in  # NO SLASHES HERE!
-REDIRECT_URL - defaults to "https://amazon.com"
-DEFAULT_FILENAME - defaults to "ClientDesktopApp"
-USE_ORIGINAL_EXTENSION - defaults to "True" # Uses the extension of the Original file
-DEFAULT_PATHS_FILE - defaults to "urls.default.json"
-MISS - defaults to "abort". If non-existent Alias is used. Values: [redir|abort]
-EXPIRED - defaults to "abort". If expired Alias is used. Values: [redir|abort]
-LOG_SPAWN_FILE - defaults to "wormnest.mgmt_route.txt". Logs lines like "/MANAGE_URL_DIR PORT date" for all runs
 
-```
+Go to the [Project's Wiki Page](https://github.com/operatorequals/wormnest/wiki/Deployment)
 
-### The "*urls.default.json*"
-Simple as a JSON that contains a *URL Alias* and a *Path* in the served directory:
-
-```json
-{
-  "download_now":{
-    "path":"metasploit/generated/meter_pinning_443.exe",
-    "filename":"CrazyTaxi_cracked_singlefile_by_Raz0r_team_2006.exe"
-  },
-  "android":{
-    "path":"metasploit/generated/meter_pinning_443.apk",
-  },
-  [.. More definitions ..]
-}
-```
-
-The above will make the default setup of `wormnest` route the following:
-* `http[s]://payload-server:8000/download_now`
-to serve `metasploit/generated/meter_pinning_443.exe` with a `"Content-Disposition" HTTP Header` containing `CrazyTaxi_cracked_singlefile_by_Raz0r_team_2006.exe` as the `filename` argument
-
-* `http[s]://payload-server:8000/android`
-to serve `metasploit/generated/meter_pinning_443.apk` with the default filename of `ClientDesktopApp` and the file's original extension (`USE_ORIGINAL_EXTENSION` parameter).
-Hence `ClientDesktopApp.apk` will be placed in the `"Content-Disposition" HTTP Header`.
 
 ### For *Cobalt Strikers*
 Generating payloads from the CS client directly to the (remote) *Worm Nest* deployment is as simple as [`sshfs`](https://github.com/libfuse/sshfs) to that served directory (`SRV_DIR`). People tend to forget that `scp` is by far NOT THE ONLY WAY!
