@@ -299,23 +299,36 @@ def file_upload():
 	if request.method == 'POST':
 		# check if the post request has the file part
 		if 'file' not in request.files:
-			flash('No file part')
-			return redirect(request.url)
+			return render_template(
+					'upload_page.html',
+					manage_url = MANAGE_URL_DIR,
+					message = "No file submitted"
+				)
 		file = request.files['file']
 		# if user does not select file, browser also
 		# submit a empty part without filename
 		if file.filename == '':
-			flash('No selected file')
-			return redirect(request.url)
+			return render_template(
+						'upload_page.html',
+						manage_url = MANAGE_URL_DIR,
+						message = "No filename submitted"
+					)
 		if file:
 			filename = request.form.get('filename', file.filename)
 			filename = secure_filename(filename)
-			file.save(
-				os.path.join(
-					app.config['UPLOAD_FOLDER'],
-					filename
+			try:
+				file.save(
+					os.path.join(
+						app.config['UPLOAD_FOLDER'],
+						filename
+						)
 					)
-				)
+			except IsADirectoryError:
+				return render_template(
+							'upload_page.html',
+							manage_url = MANAGE_URL_DIR,
+							message = "Filename exists"
+						)
 
 			if request.form.get("create_alias",
 				default = False,
@@ -326,11 +339,14 @@ def file_upload():
 						filepath = filename
 						)
 					)
-			return redirect(request.url)
-
+			return render_template(
+						'upload_page.html',
+						manage_url = MANAGE_URL_DIR,
+						message = "File '{}' uploaded successfully!".format(filename)
+					)
 	return render_template(
 				'upload_page.html',
-				manage_url = MANAGE_URL_DIR
+				manage_url = MANAGE_URL_DIR,
 			)
 				
 
