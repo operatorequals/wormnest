@@ -3,6 +3,8 @@ from flask import Flask
 from flask import flash,request,send_file,send_from_directory,redirect,render_template, abort
 
 from werkzeug.utils import secure_filename
+from ipaddress import ip_address, ip_network
+
 
 import os
 import random
@@ -76,6 +78,7 @@ if MANAGE_URL_DIR == '*':
 
 MISS = os.getenv("MISS", 'abort')
 EXPIRE = os.getenv("EXPIRE", 'abort')
+BLACKLISTED = os.getenv("BLACKLISTED", 'abort')
 
 LOG_SPAWN_FILE = os.getenv("LOG_SPAWN_FILE", "wormnest.mgmt_route.txt")
 
@@ -96,6 +99,34 @@ DEFAULT_PATHS_FILE = os.getenv(
 	"urls.default.json"
 	)
 
+IP_WHITELIST = os.getenv(
+	"IP_WHITELIST",
+	"0.0.0.0/0"
+	)
+try:
+	IP_WHITELIST_tmp = []
+	ip_net_str_toks = IP_WHITELIST.split(',')
+
+	for ip_net_str in ip_net_str_toks:
+		print ("[->] "+ip_net_str)
+		ip_net = ip_network(ip_net_str, strict=False)
+		print (ip_net)
+		IP_WHITELIST_tmp.append(ip_net)
+		print ("Added Subnet")
+	IP_WHITELIST = IP_WHITELIST_tmp
+
+except Exception as e:
+	print ("[-] 'IP_WHITELIST' is used as:")
+	print ("   IP_WHITELIST='127.0.0.1/8,192.168.0.0/16'")
+	print (IP_WHITELIST)
+	sys.exit(10)
+
+
+print(IP_WHITELIST)
+# sys.exit(10)
+
+
+
 HOOK_SCRIPTS = os.getenv("HOOK_SCRIPTS","")
 hook_list = enumerate(HOOK_SCRIPTS.split(":"))
 for i, hook in hook_list:
@@ -105,6 +136,7 @@ for i, hook in hook_list:
 		'hook_{}'.format(i),
 		hook
 	)
+
 
 def redirect_away():
 	return redirect(REDIRECT_URL, code=302)
@@ -119,6 +151,7 @@ behaviors = {
 
 default_miss = behaviors.get(MISS,'abort')
 on_expired = behaviors.get(EXPIRE,'abort')
+blacklisted = behaviors.get(BLACKLISTED,'abort')
 
 
 log_spawn(LOG_SPAWN_FILE, MANAGE_URL_DIR, PORT)
@@ -353,6 +386,10 @@ def file_upload():
 #	Default Behaviour
 @app.route('/<url_alias>')
 def resolve_url(url_alias):
+
+	remote_host = ip_address(request.remote_addr)
+	if not utils.is_whitelisted(IP_WHITELIST, remote_host):
+		return blacklisted()
 	try:
 		resolved_url = db_handler.get_path(url_alias)
 	except KeyError:
