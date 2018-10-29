@@ -29,13 +29,6 @@ python3 app.py
 '''
 app = Flask(__name__)
 
-@app.after_request
-def add_header(response):
-	response.headers['Cache-Control'] = 'no-store'
-	del response.headers['Expires']
-	response.headers['Server'] = "Apache httpd 2.2.10"	# Intentionally old
-	del response.headers['Date']
-	return response
 
 def get_random_alias(length=None):
 	assert ALIAS_DIGITS_MIN <= ALIAS_DIGITS_MAX
@@ -131,6 +124,7 @@ except Exception as e:
 print(IP_WHITELIST)
 # sys.exit(10)
 
+SERVER_HEADER = os.getenv("SERVER_HEADER", "Apache httpd 2.2.10") # Intentionally old
 
 
 HOOK_SCRIPTS = os.getenv("HOOK_SCRIPTS","")
@@ -158,6 +152,15 @@ behaviours = {
 default_miss = behaviours.get(MISS,'abort')
 on_expired = behaviours.get(EXPIRE,'abort')
 blacklisted = behaviours.get(BLACKLISTED,'abort')
+
+
+@app.after_request
+def add_header(response):
+	response.headers['Cache-Control'] = 'no-store'
+	del response.headers['Expires']
+	response.headers['Server'] = SERVER_HEADER
+	del response.headers['Date']
+	return response
 
 
 log_spawn(LOG_SPAWN_FILE, MANAGE_URL_DIR, PORT)
