@@ -2,16 +2,18 @@
 This hook serves a random file in an existing directory.
 The 'path' when using the /add endpoint has to point to that directory.
 
-Useful 
+Useful when you don't want to spread the same malware,
+but generating on request is takes time.
+
+Just pre-generate a bunch of executables, HTAs, whatevers and put them in the folder
 """
 import hooker
-from wormnest.utils import check_filename_for_hook
-import os, sys
+import os
 import random
 
 
-@hooker.hook("on_request")
-def random_from_directory(filename, request, retvals={}):
+@hooker.hook("pre_file")
+def random_from_directory(filename, request):
 
 	# If not a directory, this hook is not handling th request
 	if not os.path.isdir(filename): return None
@@ -23,5 +25,4 @@ def random_from_directory(filename, request, retvals={}):
 	full_name = os.path.join(filename, chosen_file)
 	fd = open(full_name, 'rb')
 
-	retvals['fd'] = fd
 	return fd

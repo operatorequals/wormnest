@@ -12,7 +12,13 @@ import imp
 
 import requests
 import hooker
-hooker.EVENTS.append(["on_request"])
+
+hooker.EVENTS.append("pre_process",
+	help="Before any processing of the URL alias starts. Useful for UA filters, blacklists, etc")
+hooker.EVENTS.append("pre_file",
+	help="Before the alias resolves to a file")
+hooker.EVENTS.append("pre_response",
+	help="Before the created request is sent")
 
 import wormnest.db_handler as db_handler
 import wormnest.utils as utils
@@ -55,7 +61,7 @@ def log_spawn(filename, mgmt_key, port):
 			port,
 			now
 			)
-		)	
+		)
 
 IP = os.getenv("IP", "0.0.0.0")
 PORT = os.getenv("PORT", 8000)
@@ -144,23 +150,17 @@ def redirect_away():
 def abort_404():
 	return abort(404)
 
-behaviors = {
+behaviours = {
 	'abort' : abort_404,
 	'redir' : redirect_away,
 }
 
-default_miss = behaviors.get(MISS,'abort')
-on_expired = behaviors.get(EXPIRE,'abort')
-blacklisted = behaviors.get(BLACKLISTED,'abort')
+default_miss = behaviours.get(MISS,'abort')
+on_expired = behaviours.get(EXPIRE,'abort')
+blacklisted = behaviours.get(BLACKLISTED,'abort')
 
 
 log_spawn(LOG_SPAWN_FILE, MANAGE_URL_DIR, PORT)
-
-
-# @app.route('/%s/' % MANAGE_URL_DIR)
-# def show_manage_redir():
-# 	print(request.base_url[:-1])
-# 	return redirect(request.base_url[:-1])
 
 @app.route('/%s/' % MANAGE_URL_DIR)
 def show_manage():
@@ -315,6 +315,7 @@ def del_url():
 		deleted = False
 	return "Deleted" if deleted else "NOT deleted"
 
+
 @app.route('/%s/show' % MANAGE_URL_DIR)
 def show_all(path=None):
 	entries = db_handler.get_all(path)
@@ -387,53 +388,96 @@ def file_upload():
 @app.route('/<url_alias>')
 def resolve_url(url_alias):
 
+	ret_response = None
+	# Check if whitelisted IP
 	remote_host = ip_address(request.remote_addr)
 	if not utils.is_whitelisted(IP_WHITELIST, remote_host):
-		return blacklisted()
-	try:
-		resolved_url = db_handler.get_path(url_alias)
-	except KeyError:
-		return default_miss()
-	except utils.LinkExpired:
-		return on_expired()
+		ret_response = blacklisted()
+		return hook_n_respond(request, ret_response)
 
-	# Run the hooks for iconic filenames
-	returned_file = resolved_url.path
-	hook_ret = {}
-	hooker.EVENTS["on_request"](
-		filename=resolved_url.path,
+	# Run "pre_process" hook checks
+	hook_ret = hooker.EVENTS["pre_process"](
 		request=request,
-		retvals=hook_ret
-		)
-	fd = hook_ret.get('fd', None)
-	resp = hook_ret.get('resp', None)
+		url_alias=url_alias,
+	)
+	#	In case the hook changed the original request
+	url_alias = request.path
+	print("[*] %s" % url_alias)
+	try:
+		behaviour = hook_ret.popitem()[1]
+		# Get the behavior from the list and generate its response:
+		if behaviour is not None:
+			ret_response = behaviours.get(behaviour, abort_404)()
+			return hook_n_respond(request, ret_response)
+	except KeyError:
+		pass
 
-	if fd:
+	# Check if URL Alias exists
+	try:
+		alias_db_obj = db_handler.get_path(url_alias)
+	except KeyError:
+		# Non-existent
+		ret_response = default_miss()
+		return hook_n_respond(request, ret_response)
+	except utils.LinkExpired:
+		# Existent and expired
+		ret_response = on_expired()
+		return hook_n_respond(request, ret_response)
+
+
+	path = alias_db_obj.path
+	# Run the hooks for iconic filenames
+	hook_ret = hooker.EVENTS["pre_file"](
+		filename=path,
+		request=request,
+		)
+	try:
+		iconic_fd = hook_ret.popitem()[1]
+	except KeyError:
+		iconic_fd = None
+
+	if iconic_fd:
 		print(
 			"[+] Filename '{}' HOOKED! A Custom file is served!".format(
-				resolved_url.path
+				alias_db_obj.path
 				)
 			)
-		# If it succeds the returned fd will be served 
-		returned_file = fd
-	elif resp:
-		print(
-			"[+] Filename '{}' HOOKED! A Custom response is served!".format(
-				resolved_url.path
-				)
+	# If it succeds the returned fd will be served 
+		ret_fd = iconic_fd
+		ret_response = send_file(
+				filename_or_fp = ret_fd,
+				as_attachment = True,
+				attachment_filename = alias_db_obj.attachment,
 			)
-		return resp
+		return hook_n_respond(request, ret_response)
 
-	else:
-		# Else check if the file is real
-		if not os.path.isfile(returned_file):
-			return default_miss()
+	# Else the file file system is checked for real files
+	if not os.path.isfile(path):
+		# If doensn't exist, 'miss' behaviour is triggered
+		ret_response = default_miss()
+		return hook_n_respond(request, ret_response)
 
-	return send_file(
-		filename_or_fp = returned_file,
-		as_attachment = True,
-		attachment_filename = resolved_url.attachment,
+	ret_fd = open(path,'rb')
+	ret_response = send_file(
+			filename_or_fp = ret_fd,
+			as_attachment = True,
+			attachment_filename = alias_db_obj.attachment,
 		)
+
+	return hook_n_respond(request, ret_response)
+
+
+def hook_n_respond(request, response):
+	hook_ret = hooker.EVENTS["pre_response"](
+		request=request,
+		response=response
+		)
+	try:
+		ret_response_final = hook_ret.popitem()[1]
+	except KeyError:
+		ret_response_final = response
+	return ret_response_final
+
 
 def main(*args, **kwargs):
 
@@ -442,8 +486,8 @@ def main(*args, **kwargs):
 	app.run(
 		host=IP,
 		port=PORT,
-		debug=False
-		)
+		debug=os.getenv("DEBUG", False)
+	)
 
 if __name__=="__main__":
 	main()

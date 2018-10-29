@@ -7,17 +7,17 @@ from wormnest.utils import check_filename_for_hook
 import os, sys
 import tempfile
 
-@hooker.hook("on_request")  # <-- This declares a hook when a GET request is made
-def serve_random(filename, request, retvals={}):
+trigger_filename = "random_file.bin"
+
+@hooker.hook("pre_file")  # <-- This declares a hook when a GET request is made
+def serve_random(filename, request):
 	'''
 filename: The filename that is registered as returned file. Most of the time non-existent
 request: The Flask request object that triggered the hook
-retval: Hooker reserved dict. The return value is expected in the 'fd' key.
 	'''
-  # Standard code, checks if the requested filename contains this function's name before the last dot.
+  # Standard code, checks if the "trigger_filename" is in the requested filename 
   # This is used as sign to trigger the rest of the code.
-	func_name = sys._getframe().f_code.co_name
-	if not check_filename_for_hook(filename, func_name):
+	if trigger_filename not in filename:
 		return None
 
   # A Temporary File is created - read only
@@ -27,9 +27,8 @@ retval: Hooker reserved dict. The return value is expected in the 'fd' key.
   # A 'dd' command to get random data populated in the file
 	command = "dd if=/dev/urandom of={} count=128".format(generated_file)
 	print("[!] '{}'".format(command))
+  #	Not using Python's "random" to show how to escape to shell for file creation
+  #	Useful for script calling to create custom files (msfvenom, etc)
 	os.system(command)
 
-  # The file is returned using the 'hookers' interface
-	retvals['fd'] = fd
-  # Irrelevant
 	return fd
