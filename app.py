@@ -305,7 +305,7 @@ def add_url():
 			link=full_link
 			)
 
-@app.route('/%s/del' % MANAGE_URL_DIR)
+@app.route('/%s/del' % MANAGE_URL_DIR, methods=["GET", "POST"])
 def del_url():
 	alias = request.args.get("alias", None)
 	if alias is None:
@@ -385,7 +385,6 @@ def file_upload():
 				'upload_page.html',
 				manage_url = MANAGE_URL_DIR,
 			)
-				
 
 #	Default behaviour - Serve all non "/manage" paths
 @app.route('/<path:url_alias>')

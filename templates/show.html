@@ -18,6 +18,12 @@
 <td>/{{ entry.url_alias }}</td>
 <td align="center">{{ entry.expires_after_clicks }}</td>
 <td>{{ entry.attachment }}</td>
+<td>
+	<form action="del" method="post">
+		<input hidden="true" name="alias" value="{{ entry.url_alias }}" />
+		<button type="submit" value="del">Delete</button>
+	</form>
+</td>
     </tr>
 
     {% endfor %}
