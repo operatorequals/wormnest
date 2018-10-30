@@ -4,13 +4,12 @@ from flask import flash,request,send_file,send_from_directory,redirect,render_te
 
 from werkzeug.utils import secure_filename
 from ipaddress import ip_address, ip_network
-
+import urllib.request
 
 import os
 import random
 import imp
 
-import requests
 import hooker
 
 hooker.EVENTS.append("pre_process",
@@ -188,7 +187,7 @@ def load_defaults():
 				print (filename)
 				if filename:
 					add_url_template += '&filename={filename}'
-				requests.get(add_url_template.format(
+				urllib.request.urlopen(add_url_template.format(
 						port=PORT,
 						man=MANAGE_URL_DIR,
 						path=path,
@@ -392,7 +391,6 @@ def file_upload():
 @app.route('/<path:url_alias>')
 @app.route('/', defaults={'url_alias': ''})
 def resolve_url(url_alias):
-	print ("Alias: %s" % request.path)
 	ret_response = None
 	# Check if whitelisted IP
 	remote_host = ip_address(request.remote_addr)
@@ -403,7 +401,6 @@ def resolve_url(url_alias):
 	# Run "pre_process" hook checks
 	hook_ret = hooker.EVENTS["pre_process"](
 		request=request,
-		# url_alias="",
 		url_alias=url_alias,
 	)
 	#	In case the hook changed the original request
