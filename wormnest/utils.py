@@ -27,7 +27,7 @@ def check_filename_for_hook(filename, hook_name):
 
 def is_whitelisted(IP_WHITELIST, host):
 	for ip_net in IP_WHITELIST:
-		print(host, ip_net, host in ip_net)
+		# print(host, ip_net, host in ip_net)
 		if host in ip_net:
 			return True
 	return False
