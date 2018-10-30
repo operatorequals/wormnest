@@ -1,4 +1,4 @@
-
+#!/bin/env python
 from flask import Flask
 from flask import flash,request,send_file,send_from_directory,redirect,render_template, abort
 
@@ -117,7 +117,7 @@ try:
 except Exception as e:
 	print ("[-] 'IP_WHITELIST' is used as:")
 	print ("   IP_WHITELIST='127.0.0.1/8,192.168.0.0/16'")
-	print (IP_WHITELIST)
+	print ("Currently Set as: '{}'".format(IP_WHITELIST))
 	sys.exit(10)
 
 
@@ -132,10 +132,11 @@ hook_list = enumerate(HOOK_SCRIPTS.split(":"))
 for i, hook in hook_list:
 	if hook == '': continue
 	print("[+] Loading hook {}".format(hook))
-	ext_module = imp.load_source(
-		'hook_{}'.format(i),
-		hook
-	)
+	hooker.load(hook)
+	# ext_module = imp.load_source(
+	# 	'hook_{}'.format(i),
+	# 	hook
+	# )
 
 
 def redirect_away():
@@ -387,10 +388,11 @@ def file_upload():
 			)
 				
 
-#	Default Behaviour
-@app.route('/<url_alias>')
+#	Default behaviour - Serve all non "/manage" paths
+@app.route('/<path:url_alias>')
+@app.route('/', defaults={'url_alias': ''})
 def resolve_url(url_alias):
-
+	print ("Alias: %s" % request.path)
 	ret_response = None
 	# Check if whitelisted IP
 	remote_host = ip_address(request.remote_addr)
@@ -401,6 +403,7 @@ def resolve_url(url_alias):
 	# Run "pre_process" hook checks
 	hook_ret = hooker.EVENTS["pre_process"](
 		request=request,
+		# url_alias="",
 		url_alias=url_alias,
 	)
 	#	In case the hook changed the original request
