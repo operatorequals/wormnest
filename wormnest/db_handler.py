@@ -22,6 +22,7 @@ class Url(Base):
 	path = Column(String, nullable=False)
 	expires_after_clicks = Column(Integer, default = -1)
 	attachment = Column(String)
+	mimetype = Column(String, nullable=True, default=None)
 
 	def __repr__(self):
 		return "(URL: /{} for file '{}'. Expires in {} requests. {})".format(
@@ -75,13 +76,14 @@ def get_path(alias, click=True, delete=False):
 
 
 
-def add_url(path, url_alias, expires, attachment=None):
+def add_url(path, url_alias, expires, attachment=None, mimetype=None):
 	session = Session()
 	entry = Url(
 		path=path,
 		url_alias=url_alias,
 		expires_after_clicks=expires,
-		attachment = attachment
+		attachment = attachment,
+		mimetype = mimetype
 		)
 	session.add(entry)
 	session.commit()

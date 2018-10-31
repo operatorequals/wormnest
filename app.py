@@ -244,6 +244,7 @@ def add_url():
 	expires = request.args.get("clicks", -1)
 	alias = request.args.get("alias", get_random_alias())
 	attach_name = request.args.get("filename")
+	mimetype = request.args.get("mime", None)
 	unchecked_path = request.args.get("unchecked", False)
 	if not request.args:
 		return render_template(
@@ -290,7 +291,11 @@ def add_url():
 			error_msg="Parameter 'clicks' must be positive Integer"
 			)
 	try:
-		db_handler.add_url(path, alias, expires, attach_name)
+		db_handler.add_url(
+			path, alias, expires,
+			attachment = attach_name,
+			mimetype = mimetype
+			)
 	except Exception as e:
 		print (e)
 		err =  "Error adding alias '{}'' for path '{}'".format(alias, path)
@@ -452,6 +457,7 @@ def resolve_url(url_alias):
 				filename_or_fp = ret_fd,
 				as_attachment = True,
 				attachment_filename = alias_db_obj.attachment,
+				mimetype = alias_db_obj.mimetype,
 			)
 		return hook_n_respond(request, ret_response)
 
@@ -467,7 +473,7 @@ def resolve_url(url_alias):
 			filename_or_fp = ret_fd,
 			as_attachment = True,
 			attachment_filename = alias_db_obj.attachment,
-			mimetype = "application/hta",
+			mimetype = alias_db_obj.mimetype,
 		)
 
 	return hook_n_respond(request, ret_response)
