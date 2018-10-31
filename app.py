@@ -159,7 +159,9 @@ def add_header(response):
 	response.headers['Cache-Control'] = 'no-store'
 	del response.headers['Expires']
 	response.headers['Server'] = SERVER_HEADER
+	response.headers['X-Content-Type-Options'] = "nosniff"
 	del response.headers['Date']
+
 	return response
 
 
@@ -403,7 +405,7 @@ def resolve_url(url_alias):
 		url_alias=url_alias,
 	)
 	#	In case the hook changed the original request
-	url_alias = request.path
+	url_alias = request.path[1:]	# Remove the '/'
 	print("[*] %s" % url_alias)
 	try:
 		behaviour = hook_ret.popitem()[1]
@@ -454,7 +456,8 @@ def resolve_url(url_alias):
 		return hook_n_respond(request, ret_response)
 
 	# Else the file file system is checked for real files
-	if not os.path.isfile(path):
+	print(path, os.path.isfile(path))
+	if not os.path.isfile(path):		
 		# If doensn't exist, 'miss' behaviour is triggered
 		ret_response = default_miss()
 		return hook_n_respond(request, ret_response)
@@ -464,6 +467,7 @@ def resolve_url(url_alias):
 			filename_or_fp = ret_fd,
 			as_attachment = True,
 			attachment_filename = alias_db_obj.attachment,
+			mimetype = "application/hta",
 		)
 
 	return hook_n_respond(request, ret_response)
