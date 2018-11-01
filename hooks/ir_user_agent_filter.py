@@ -20,6 +20,4 @@ def ua_filter(request, url_alias):
 		if ir_ua in ua.lower():
 			return behaviour
 
-	request.base_url = "HELLO"
-
 	return None
