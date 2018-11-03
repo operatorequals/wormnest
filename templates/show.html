@@ -5,10 +5,11 @@
 <table border="1">
 <b>
 	    <tr>
-<td>Real Path</td>
-<td>Alias URL</td>
-<td>Expires after N clicks</td>
-<td>Served as</td>
+<td><b>Real Path</b></td>
+<td><b>Alias URL</b></td>
+<td><b>Expires after N clicks</b></td>
+<td><b>Served as</b></td>
+<td><b>MimeType</b></td>
     </tr>
 </b>
 
@@ -18,6 +19,7 @@
 <td>/{{ entry.url_alias }}</td>
 <td align="center">{{ entry.expires_after_clicks }}</td>
 <td>{{ entry.attachment }}</td>
+<td>{{ entry.mimetype }}</td>
 <td>
 	<form action="del" method="post">
 		<input hidden="true" name="alias" value="{{ entry.url_alias }}" />
