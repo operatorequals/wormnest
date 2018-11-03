@@ -70,8 +70,6 @@ def add_header(response):
 	return response
 
 
-utils.log_spawn(CONFIG['LOG_SPAWN_FILE'], CONFIG['MANAGE_URL_DIR'], CONFIG['PORT'])
-
 @app.route('/%s/' % CONFIG['MANAGE_URL_DIR'])
 def show_manage():
 	return render_template(
@@ -404,8 +402,7 @@ def hook_n_respond(request, response):
 
 def main(*args, **kwargs):
 
-	import sys
-	print (sys.argv)
+	utils.log_spawn(CONFIG['LOG_SPAWN_FILE'], CONFIG['MANAGE_URL_DIR'], CONFIG['PORT'])
 	app.run(
 		host=CONFIG['IP'],
 		port=CONFIG['PORT'],
