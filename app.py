@@ -27,7 +27,7 @@ To run the App:
 python3 app.py
 '''
 app = Flask(__name__)
-
+CONFIG = {}
 
 def get_random_alias(length=None):
 	assert ALIAS_DIGITS_MIN <= ALIAS_DIGITS_MAX
@@ -36,110 +36,15 @@ def get_random_alias(length=None):
 	return utils.randomword(length)
 
 
-def log_spawn(filename, mgmt_key, port):
-	import time
-	now = time.strftime("%c")
-	manage_key_file = filename
-	
-	print (
-		"[!] The Management Route is '{}'\nNoted in '{}'".format(
-			mgmt_key,
-			manage_key_file
-		)
-	)
-	with open(manage_key_file, 'a') as f:
-		f.write("/{} - {} - ({})\n".format(
-			mgmt_key,
-			port,
-			now
-			)
-		)
+CONFIG = utils.parse_config()
 
-IP = os.getenv("IP", "0.0.0.0")
-PORT = os.getenv("PORT", 8000)
-
-SRV_DIR = os.getenv("SRV_DIR","test_directory/")
-try:
-	os.mkdir(SRV_DIR)
-	print("[+] Directory: '{}' created!".format(SRV_DIR))
-except Exception as e:
-	print("[+] Directory: '{}' found!".format(SRV_DIR))
-
-app.config['UPLOAD_FOLDER'] = SRV_DIR
-
-ALIAS_DIGITS_MIN = os.getenv("ALIAS_DIGITS_MIN", 8)
-ALIAS_DIGITS_MAX = os.getenv("ALIAS_DIGITS_MAX", 8)
-
-MANAGE_URL_DIR = os.getenv("MANAGE_URL_DIR", 'manage')
-if MANAGE_URL_DIR == '*':
-	MANAGE_URL_DIR = get_random_alias(12)
-
-MISS = os.getenv("MISS", 'abort')
-EXPIRE = os.getenv("EXPIRE", 'abort')
-BLACKLISTED = os.getenv("BLACKLISTED", 'abort')
-
-LOG_SPAWN_FILE = os.getenv("LOG_SPAWN_FILE", "wormnest.mgmt_route.txt")
-
-REDIRECT_URL = os.getenv(
-	"REDIRECT_URL",
-	'https://amazon.com'
-	)
-DEFAULT_FILENAME = os.getenv(
-	"DEFAULT_FILENAME",
-	'ClientDesktopApp'
-	)
-USE_ORIGINAL_EXTENSION = os.getenv(
-	"USE_ORIGINAL_EXTENSION",
-	True
-	)
-DEFAULT_PATHS_FILE = os.getenv(
-	"DEFAULT_PATHS_FILE",
-	"urls.default.json"
-	)
-
-IP_WHITELIST = os.getenv(
-	"IP_WHITELIST",
-	"0.0.0.0/0"
-	)
-try:
-	IP_WHITELIST_tmp = []
-	ip_net_str_toks = IP_WHITELIST.split(',')
-
-	for ip_net_str in ip_net_str_toks:
-		print ("[->] "+ip_net_str)
-		ip_net = ip_network(ip_net_str, strict=False)
-		print (ip_net)
-		IP_WHITELIST_tmp.append(ip_net)
-		print ("Added Subnet")
-	IP_WHITELIST = IP_WHITELIST_tmp
-
-except Exception as e:
-	print ("[-] 'IP_WHITELIST' is used as:")
-	print ("   IP_WHITELIST='127.0.0.1/8,192.168.0.0/16'")
-	print ("Currently Set as: '{}'".format(IP_WHITELIST))
-	sys.exit(10)
-
-
-print(IP_WHITELIST)
+app.config['UPLOAD_FOLDER'] = CONFIG['SRV_DIR']
+print(CONFIG['IP_WHITELIST'])
 # sys.exit(10)
-
-SERVER_HEADER = os.getenv("SERVER_HEADER", "Apache httpd 2.2.10") # Intentionally old
-
-
-HOOK_SCRIPTS = os.getenv("HOOK_SCRIPTS","")
-hook_list = enumerate(HOOK_SCRIPTS.split(":"))
-for i, hook in hook_list:
-	if hook == '': continue
-	print("[+] Loading hook {}".format(hook))
-	hooker.load(hook)
-	# ext_module = imp.load_source(
-	# 	'hook_{}'.format(i),
-	# 	hook
-	# )
 
 
 def redirect_away():
-	return redirect(REDIRECT_URL, code=302)
+	return redirect(CONFIG['REDIRECT_URL'], code=302)
 
 def abort_404():
 	return abort(404)
@@ -149,38 +54,38 @@ behaviours = {
 	'redir' : redirect_away,
 }
 
-default_miss = behaviours.get(MISS,'abort')
-on_expired = behaviours.get(EXPIRE,'abort')
-blacklisted = behaviours.get(BLACKLISTED,'abort')
+default_miss = behaviours.get(CONFIG['MISS'],'abort')
+on_expired = behaviours.get(CONFIG['EXPIRE'],'abort')
+blacklisted = behaviours.get(CONFIG['BLACKLISTED'],'abort')
 
 
 @app.after_request
 def add_header(response):
 	response.headers['Cache-Control'] = 'no-store'
 	del response.headers['Expires']
-	response.headers['Server'] = SERVER_HEADER
+	response.headers['Server'] = CONFIG['SERVER_HEADER']
 	response.headers['X-Content-Type-Options'] = "nosniff"
 	del response.headers['Date']
 
 	return response
 
 
-log_spawn(LOG_SPAWN_FILE, MANAGE_URL_DIR, PORT)
+utils.log_spawn(CONFIG['LOG_SPAWN_FILE'], CONFIG['MANAGE_URL_DIR'], CONFIG['PORT'])
 
-@app.route('/%s/' % MANAGE_URL_DIR)
+@app.route('/%s/' % CONFIG['MANAGE_URL_DIR'])
 def show_manage():
 	return render_template(
 		"manage_help.html",
 		manage_url = request.base_url
 		)
 
-@app.route('/%s/load_defaults' % MANAGE_URL_DIR)
+@app.route('/%s/load_defaults' % CONFIG['MANAGE_URL_DIR'])
 def load_defaults():
 	add_url_template = "http://127.0.0.1:{port}/{man}/add?path={path}&alias={alias}&unchecked=True"
-	if DEFAULT_PATHS_FILE:
-		print("[+] Importing defaults from '{}'".format(DEFAULT_PATHS_FILE))
+	if CONFIG['DEFAULT_PATHS_FILE']:
+		print("[+] Importing defaults from '{}'".format(CONFIG['DEFAULT_PATHS_FILE']))
 		import json
-		with open(DEFAULT_PATHS_FILE) as url_defaults:
+		with open(CONFIG['DEFAULT_PATHS_FILE']) as url_defaults:
 			defaults_url_dict = json.load(url_defaults)
 			for path, url_params in defaults_url_dict.items():
 				print(path, url_params)
@@ -190,8 +95,8 @@ def load_defaults():
 				if filename:
 					add_url_template += '&filename={filename}'
 				urllib.request.urlopen(add_url_template.format(
-						port=PORT,
-						man=MANAGE_URL_DIR,
+						port=CONFIG['PORT'],
+						man=CONFIG['MANAGE_URL_DIR'],
 						path=path,
 						alias=alias,
 						filename=filename,
@@ -202,17 +107,17 @@ def load_defaults():
 		)
 
 @app.route(
-	'/%s/list/' % MANAGE_URL_DIR,
+	'/%s/list/' % CONFIG['MANAGE_URL_DIR'],
 	defaults={'req_path': ''}
 	)
-@app.route('/%s/list/<path:req_path>' % MANAGE_URL_DIR)
+@app.route('/%s/list/<path:req_path>' % CONFIG['MANAGE_URL_DIR'])
 def dir_listing(req_path):
 	'''
 	Found here:
 https://stackoverflow.com/questions/23718236/python-flask-browsing-through-directory-with-files
 	'''
 	# Joining the base and the requested path
-	abs_path = os.path.join(SRV_DIR, req_path)
+	abs_path = os.path.join(CONFIG['SRV_DIR'], req_path)
 
 	# Return 404 if path doesn't exist
 	if not os.path.exists(abs_path):
@@ -230,14 +135,14 @@ https://stackoverflow.com/questions/23718236/python-flask-browsing-through-direc
 			(f, os.path.join(request.base_url, f))
 		)
 	# print (full_paths)
-	add_url_link = "%s%s/add" % (request.url_root, MANAGE_URL_DIR)
+	add_url_link = "%s%s/add" % (request.url_root, CONFIG['MANAGE_URL_DIR'])
 	return render_template('file.html',
 		files=full_paths,
 		add_url=add_url_link
 		)
 
 
-@app.route('/%s/add' % MANAGE_URL_DIR)
+@app.route('/%s/add' % CONFIG['MANAGE_URL_DIR'])
 def add_url():
 
 	path = request.args.get("path")
@@ -267,15 +172,15 @@ def add_url():
 
 	if not attach_name:
 
-		if not DEFAULT_FILENAME:
+		if not CONFIG['DEFAULT_FILENAME']:
 			# The filename is the path's filename
 			attach_name = original_filename
 		else:
-			attach_name = DEFAULT_FILENAME
-			if USE_ORIGINAL_EXTENSION:
+			attach_name = CONFIG['DEFAULT_FILENAME']
+			if CONFIG['USE_ORIGINAL_EXTENSION']:
 				attach_name += original_extension
 
-	path = os.path.join(SRV_DIR, path)
+	path = os.path.join(CONFIG['SRV_DIR'], path)
 	if not os.path.isfile(path) and not unchecked_path:
 		return render_template(
 			'custom_error.html', 
@@ -312,7 +217,7 @@ def add_url():
 			link=full_link
 			)
 
-@app.route('/%s/del' % MANAGE_URL_DIR, methods=["GET", "POST"])
+@app.route('/%s/del' % CONFIG['MANAGE_URL_DIR'], methods=["GET", "POST"])
 def del_url():
 	alias = request.args.get("alias", None)
 	if alias is None:
@@ -326,17 +231,17 @@ def del_url():
 	return "Deleted" if deleted else "NOT deleted"
 
 
-@app.route('/%s/show' % MANAGE_URL_DIR)
+@app.route('/%s/show' % CONFIG['MANAGE_URL_DIR'])
 def show_all(path=None):
 	entries = db_handler.get_all(path)
 	return render_template(
-				'show.html',
+				'show.html',	# Fix show.html to contain mimetypes
 				entries = entries
 				)
 
 
 @app.route(
-	'/%s/upload' % MANAGE_URL_DIR,
+	'/%s/upload' % CONFIG['MANAGE_URL_DIR'],
 	methods=['POST', 'GET']
 	)
 def file_upload():
@@ -345,7 +250,7 @@ def file_upload():
 		if 'file' not in request.files:
 			return render_template(
 					'upload_page.html',
-					manage_url = MANAGE_URL_DIR,
+					manage_url = CONFIG['MANAGE_URL_DIR'],
 					message = "No file submitted"
 				)
 		file = request.files['file']
@@ -354,7 +259,7 @@ def file_upload():
 		if file.filename == '':
 			return render_template(
 						'upload_page.html',
-						manage_url = MANAGE_URL_DIR,
+						manage_url = CONFIG['MANAGE_URL_DIR'],
 						message = "No filename submitted"
 					)
 		if file:
@@ -370,7 +275,7 @@ def file_upload():
 			except IsADirectoryError:
 				return render_template(
 							'upload_page.html',
-							manage_url = MANAGE_URL_DIR,
+							manage_url = CONFIG['MANAGE_URL_DIR'],
 							message = "Filename exists"
 						)
 
@@ -379,18 +284,18 @@ def file_upload():
 				type = bool):
 				return redirect(
 					"{manage_url}/add?path={filepath}".format(
-						manage_url = MANAGE_URL_DIR,
+						manage_url = CONFIG['MANAGE_URL_DIR'],
 						filepath = filename
 						)
 					)
 			return render_template(
 						'upload_page.html',
-						manage_url = MANAGE_URL_DIR,
+						manage_url = CONFIG['MANAGE_URL_DIR'],
 						message = "File '{}' uploaded successfully!".format(filename)
 					)
 	return render_template(
 				'upload_page.html',
-				manage_url = MANAGE_URL_DIR,
+				manage_url = CONFIG['MANAGE_URL_DIR'],
 			)
 
 #	Default behaviour - Serve all non "/manage" paths
@@ -400,7 +305,7 @@ def resolve_url(url_alias):
 	ret_response = None
 	# Check if whitelisted IP
 	remote_host = ip_address(request.remote_addr)
-	if not utils.is_whitelisted(IP_WHITELIST, remote_host):
+	if not utils.is_whitelisted(CONFIG['IP_WHITELIST'], remote_host):
 		ret_response = blacklisted()
 		return hook_n_respond(request, ret_response)
 
@@ -469,6 +374,12 @@ def resolve_url(url_alias):
 		return hook_n_respond(request, ret_response)
 
 	ret_fd = open(path,'rb')
+	hook_ret = hooker.EVENTS["post_file"](
+		filename=path,
+		request=request,
+		fd=ret_fd
+		)
+
 	ret_response = send_file(
 			filename_or_fp = ret_fd,
 			as_attachment = True,
@@ -496,8 +407,8 @@ def main(*args, **kwargs):
 	import sys
 	print (sys.argv)
 	app.run(
-		host=IP,
-		port=PORT,
+		host=CONFIG['IP'],
+		port=CONFIG['PORT'],
 		debug=os.getenv("DEBUG", False)
 	)
 
