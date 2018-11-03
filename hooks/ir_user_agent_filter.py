@@ -14,10 +14,10 @@ print("Blocked User Agents:%s" % str(IR_UAs))
 def ua_filter(request, url_alias):
 	ua = request.headers.get("User-Agent", "")
 	if ua == '':
-		return behaviour
+		return behaviour	# <-- Means the Request will be treated with behaviour
 
 	for ir_ua in IR_UAs:
 		if ir_ua in ua.lower():
-			return behaviour
+			return behaviour	# <-- Means the Request will be treated with behaviour
 
-	return None
+	return None	# <-- Means the Request Passes
