@@ -27,20 +27,18 @@ To run the App:
 python3 app.py
 '''
 app = Flask(__name__)
-CONFIG = {}
-
-def get_random_alias(length=None):
-	assert ALIAS_DIGITS_MIN <= ALIAS_DIGITS_MAX
-	if length == None:
-		length = random.randint(ALIAS_DIGITS_MIN, ALIAS_DIGITS_MAX)
-	return utils.randomword(length)
-
 
 CONFIG = utils.parse_config()
 
 app.config['UPLOAD_FOLDER'] = CONFIG['SRV_DIR']
 print(CONFIG['IP_WHITELIST'])
 # sys.exit(10)
+
+def get_random_alias(length=None):
+	assert CONFIG['ALIAS_DIGITS_MIN'] <= CONFIG['ALIAS_DIGITS_MAX']
+	if length == None:
+		length = random.randint(CONFIG['ALIAS_DIGITS_MIN'], CONFIG['ALIAS_DIGITS_MAX'])
+	return utils.randomword(length)
 
 
 def redirect_away():
@@ -217,11 +215,13 @@ def add_url():
 
 @app.route('/%s/del' % CONFIG['MANAGE_URL_DIR'], methods=["GET", "POST"])
 def del_url():
-	alias = request.args.get("alias", None)
+	alias = request.args.get("alias", None) 
 	if alias is None:
-		return render_template(
-			'del_help.html'
-			)
+		alias = request.form.get("alias", None)
+		if alias is None:
+			return render_template(
+				'del_help.html'
+				)
 	try:
 		deleted = db_handler.del_url(alias)
 	except KeyError:
@@ -372,11 +372,11 @@ def resolve_url(url_alias):
 		return hook_n_respond(request, ret_response)
 
 	ret_fd = open(path,'rb')
-	hook_ret = hooker.EVENTS["post_file"](
-		filename=path,
-		request=request,
-		fd=ret_fd
-		)
+	# hook_ret = hooker.EVENTS["post_file"](
+	# 	filename=path,
+	# 	request=request,
+	# 	fd=ret_fd
+	# 	)
 
 	ret_response = send_file(
 			filename_or_fp = ret_fd,
