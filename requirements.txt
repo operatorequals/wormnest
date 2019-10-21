@@ -11,4 +11,4 @@ SQLAlchemy==1.2.12
 style==1.1.0
 update==0.0.1
 urllib3==1.23
-Werkzeug==0.14.1
+Werkzeug==0.15.3
