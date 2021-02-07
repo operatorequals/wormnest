@@ -15,7 +15,7 @@ trigger_filename = 'os_dep_file.dat'
 
 
 @hooker.hook("pre_file")
-def autogen_msf(filename, request, retvals = {}):
+def autogen_msf(filename, request, __retvals__ = {}):
 
 	if trigger_filename not in filename:
 		return None
