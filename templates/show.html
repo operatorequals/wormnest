@@ -16,7 +16,7 @@
     {% for entry in entries %}
     <tr>
 <td>{{ entry.path }}</td>
-<td>/{{ entry.url_alias }}</td>
+<td><a href="/{{ entry.url_alias }}">/{{ entry.url_alias }}</a></td>
 <td align="center">{{ entry.expires_after_clicks }}</td>
 <td>{{ entry.attachment }}</td>
 <td>{{ entry.mimetype }}</td>
