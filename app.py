@@ -231,7 +231,10 @@ def del_url():
     deleted = False
   return "Deleted '/%s'" % alias if deleted else "NOT deleted"
 
-
+@app.route('/%s/config' % CONFIG['MANAGE_URL_DIR'])
+def show_config(path=None):
+    return render_template('show_config.html', entries=CONFIG)
+    
 @app.route('/%s/show' % CONFIG['MANAGE_URL_DIR'])
 def show_all(path=None):
   entries = db_handler.get_all(path)
@@ -239,7 +242,6 @@ def show_all(path=None):
         'show.html',  # Fix show.html to contain mimetypes
         entries = entries
         )
-
 
 @app.route(
   '/%s/upload' % CONFIG['MANAGE_URL_DIR'],
@@ -308,9 +310,13 @@ def file_upload():
 @app.route('/', defaults={'url_alias': ''})
 def resolve_url(url_alias):
   ret_response = None
-  # Check if whitelisted IP
+  # check if whitelisted/blacklisted ip
   remote_host = ip_address(request.remote_addr)
-  if not utils.is_whitelisted(CONFIG['IP_WHITELIST'], remote_host):
+  if utils.is_listed(CONFIG['IP_BLACKLIST'], remote_host):
+    ret_response = blacklisted()
+    return hook_n_respond(request, ret_response)
+
+  if not utils.is_listed(CONFIG['IP_WHITELIST'], remote_host):
     ret_response = blacklisted()
     return hook_n_respond(request, ret_response)
 
@@ -342,7 +348,6 @@ def resolve_url(url_alias):
     # Existent and expired
     ret_response = on_expired()
     return hook_n_respond(request, ret_response)
-
 
   path = alias_db_obj.path
   # Run the hooks for iconic filenames
