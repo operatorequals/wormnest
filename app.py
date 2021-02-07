@@ -8,7 +8,6 @@ import urllib.request
 
 import os
 import random
-import imp
 
 import hooker
 
