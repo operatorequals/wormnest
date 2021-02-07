@@ -1,0 +1,19 @@
+<html><head><title>
+Deployment Configuration
+</title></head>	
+<h1> Environment Variables </h1>
+<table border="1">
+<b>
+    <tr>
+<td><b>Key</b></td>
+<td><b>Value</b></td>
+    </tr>
+</b>
+    {% for k,v in entries.items() %}
+<tr>
+<td><pre>{{ k }}</pre></td>
+<td><textfield cols=80 disabled><pre>{{ v }}</pre></textfield></td>
+</tr>
+
+    {% endfor %}
+</table>

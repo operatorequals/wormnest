@@ -2,6 +2,12 @@
 <title>
 File Upload
 </title>
+	<script>
+function getFileName(){
+	var x = document.getElementById('entry_value')
+	document.getElementById('fileName').innerHTML = x.value.split('\\').pop()
+}
+	</script>
 </head>
 <body>
 
@@ -15,7 +21,9 @@ File Upload
   	File:
   </td>
   <td>
-	<input type="file" name="file">
+	  <div class="form" width="20%" height="20%" style="border:1px solid black;">
+		  <input name="file" id="entry_value" width="20%" height="20%" ref="fileInput" type="file" onchange="getFileName()">
+	  </div>
 	</td>
 		</tr>
 
@@ -27,13 +35,28 @@ File Upload
 	<input type="text" name="filename" value=""><br>
 		</td>
 	</tr>
-	
 	<tr>
 		<td>
 	Automatically create URL alias:
 		</td>
 		<td>
 	<input type="checkbox" name="create_alias" value="True">
+		</td>
+	</tr>
+	<tr>
+		<td>
+	Alias to serve:
+		</td>
+		<td>
+	/<input type="text" name="alias" ><br>
+		</td>
+	</tr>
+	<tr>
+		<td>
+	Filename to serve:
+		</td>
+		<td>
+	<input type="text" name="deliver_filename" ><br>
 		</td>
 	</tr>
 	<tr>
