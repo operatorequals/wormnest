@@ -4,6 +4,7 @@ import os
 import sys
 from ipaddress import ip_address, ip_network
 
+import hooker
 
 def randomword(length):
   '''
