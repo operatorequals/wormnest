@@ -320,6 +320,10 @@ def resolve_url(url_alias):
     ret_response = blacklisted()
     return hook_n_respond(request, ret_response)
 
+  if utils.is_geolocation_listed(CONFIG['GEOLOCATION_BLACKLIST'], remote_host):
+    ret_response = blacklisted()
+    return hook_n_respond(request, ret_response)
+
   # Run "pre_process" hook checks
   hook_ret = hooker.EVENTS["pre_process"](
     request=request,
