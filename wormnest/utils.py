@@ -3,8 +3,13 @@ import random
 import os
 import sys
 from ipaddress import ip_address, ip_network
+import urllib.request
+import json
 
 import hooker
+
+GEOLOCATION_CACHE = {}
+GEOLOCATION_SEARCHABLES = ['state', 'country_code', 'country_name', 'city']
 
 def randomword(length):
   '''
@@ -34,6 +39,26 @@ def is_listed(IP_LIST, host):
     if host in ip_net:
       return True
   return False
+
+
+def geolocation(ip_address, api_key=''):
+  if ip_address in GEOLOCATION_CACHE:
+      return GEOLOCATION_CACHE[ip_address]
+  with urllib.request.urlopen(f"https://geolocation-db.com/json/{ip_address}") as url:
+    data = url.read()
+    data = json.loads(data)
+    GEOLOCATION_CACHE[ip_address] = data
+  return data 
+
+
+def is_geolocation_listed(GEOLOCATION_LIST, ip_address, api_key=''):
+  geolocation_dict = geolocation(ip_address)
+  for geoloc in GEOLOCATION_LIST:
+    for term in GEOLOCATION_SEARCHABLES:
+      if geoloc.lower() == geolocation_dict[term].lower():
+        return True
+  return False
+
 
 def parse_subnets(subnet_str):
   try:
@@ -113,6 +138,8 @@ def parse_config():
   CONFIG['IP_BLACKLIST'] = parse_subnets(CONFIG['IP_BLACKLIST'])
 
   CONFIG['SERVER_HEADER'] = os.getenv("SERVER_HEADER", "Apache httpd 2.2.10") # Intentionally old
+
+  CONFIG['GEOLOCATION_BLACKLIST'] = os.getenv("GEOLOCATION_BLACKLIST", "").split(',')
 
   CONFIG['HOOK_SCRIPTS'] = os.getenv("HOOK_SCRIPTS","")
   hook_list = enumerate(CONFIG['HOOK_SCRIPTS'].split(":"))
