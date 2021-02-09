@@ -127,9 +127,9 @@ def autogen_msf(filename, request):
     return fd
 ```
 Loading it and running is as easy as `HOOK_SCRIPTS=hooks/autogen_msf.py python3 app.py`.
-Now, to trigger the hook we need a file with `serve_random` in its filename to be aliased. So:
+Now, to trigger the hook we need a file with `.msf` in its filename to be aliased. So:
 ```
-http://wormnest:8080/manage/add?path=hook.serve_random.dat&alias=msf
+http://wormnest:8080/manage/add?path=rev_https.msf.exe&alias=msf
 ```
 But this returns an error, about non-existing `rev_https.msf.exe` file.
 That's why `unchecked` exists:
