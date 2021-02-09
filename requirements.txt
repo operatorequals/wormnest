@@ -1,15 +1,4 @@
-certifi
-chardet
-Click
+SQLAlchemy
 Flask
 hooker
-idna
-itsdangerous
-Jinja2
-MarkupSafe
-SQLAlchemy
-style
-update
-urllib3
-Werkzeug
-hooker
+
