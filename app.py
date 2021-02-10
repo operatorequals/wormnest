@@ -306,8 +306,8 @@ def file_upload():
       )
 
 #  Default behaviour - Serve all non "/manage" paths
-@app.route('/<path:url_alias>')
-@app.route('/', defaults={'url_alias': ''})
+@app.route('/<path:url_alias>', methods=['POST', 'GET'])
+@app.route('/', defaults={'url_alias': ''}, methods=['POST', 'GET'])
 def resolve_url(url_alias):
   ret_response = None
   # check if whitelisted/blacklisted ip
