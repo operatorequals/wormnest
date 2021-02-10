@@ -35,7 +35,6 @@ def req_log_hook(request, url_alias):
 		'path' : request.full_path,
 		'time' : time.time()
                 }
-    print(dir(request))
     with open(LOGFILE, 'a') as logs:
         print (json.dumps(log_line), file=logs)
 
