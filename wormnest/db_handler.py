@@ -11,7 +11,7 @@ Base = declarative_base()
 import wormnest.utils as utils
 # import  utils
 
-engine = create_engine('sqlite:///url.db', echo=True)
+engine = create_engine('sqlite:///url.db', echo=False)
 Session = sessionmaker(bind=engine)
 
 class Url(Base):
