@@ -1,6 +1,6 @@
 #!/bin/env python
 from flask import Flask
-from flask import flash,request,send_file,send_from_directory,redirect,render_template, abort
+from flask import flash,request,send_file,send_from_directory,redirect,render_template, abort, safe_join
 
 from werkzeug.utils import secure_filename
 from ipaddress import ip_address, ip_network
@@ -116,7 +116,7 @@ def dir_listing(req_path):
 https://stackoverflow.com/questions/23718236/python-flask-browsing-through-directory-with-files
   '''
   # Joining the base and the requested path
-  abs_path = os.path.join(CONFIG['SRV_DIR'], req_path)
+  abs_path = safe_join(CONFIG['SRV_DIR'], req_path)
 
   # Return 404 if path doesn't exist
   if not os.path.exists(abs_path):
